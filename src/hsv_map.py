@@ -28,7 +28,7 @@ PLOT_HEIGHT = PLOT_WIDTH / GOLDEN_RATIO * COLUMN_WIDTH_IN / HSV_FIGURE_SIZE[1]
 
 def compute_hsv_map(impulse_response, path, delay_removal=None):
     """Compute and persist the HSV map for one delay-removal strategy."""
-    # Each width has a unique SVD, retaining every factorization exhausts memory so we disable caching.
+    # Each width has a unique SVD; retaining every factorization exhausts memory.
     disable_caching()
     n_values = 600
     era, _, n_virtual = make_era(impulse_response, delay_removal)

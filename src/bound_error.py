@@ -249,7 +249,7 @@ def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     figure.savefig(OUTPUT)
     legend = plot_legend()
-    legend.savefig(LEGEND)
+    legend.savefig(LEGEND, bbox_inches="tight", pad_inches=0)
     if not args.no_show:
         plt.show()
     plt.close(figure)
