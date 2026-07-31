@@ -20,15 +20,15 @@ N_ROWS = N_EARS * N_SAMPLES
 MAX_VIRTUAL_INPUTS = N_ROWS
 
 
-def svd_costs(n_inputs):
-    """Return economy-SVD storage and proportional full-SVD work.
+def svd_costs(n_inputs, projection_inputs=0):
+    """Return economy-SVD storage and proportional total SVD work.
 
     The storage includes the dense input Hankel matrix and economy-size left and
     right singular-vector factors, but excludes algorithm-specific workspace.
     """
     n_columns = N_SAMPLES * n_inputs
     memory_gib = FLOAT_BYTES * (2 * N_ROWS * n_columns + N_ROWS**2) / 2**30
-    svd_work = N_ROWS**2 * n_columns
+    svd_work = N_ROWS**2 * (n_columns + projection_inputs)
     return memory_gib, svd_work
 
 
@@ -37,7 +37,7 @@ def plot():
     directions = np.arange(1, N_DIRECTIONS + 1)
     direct_memory, direct_work = svd_costs(directions)
     projected_inputs = np.minimum(directions, MAX_VIRTUAL_INPUTS)
-    projected_memory, projected_work = svd_costs(projected_inputs)
+    projected_memory, projected_work = svd_costs(projected_inputs, directions)
     marker_indices = 2 ** np.arange(int(np.log2(N_DIRECTIONS)) + 1) - 1
 
     figure, memory_axis = plt.subplots(figsize=PAPER_FIGURE_SIZE, layout="constrained")
