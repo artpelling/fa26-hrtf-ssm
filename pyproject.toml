@@ -1,0 +1,35 @@
+[project]
+name = "fa26-hrtf-ssm"
+version = "0.1.0"
+description = "Accompanying code repository for the Forum Acusticum 26 presentation."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "across @ git+https://github.com/artpelling/ssm-tools#subdirectory=packages/across",
+    "irdl>=1.0.0b4",
+    "spharpy>=1.0.0",
+    "ssmsolve @ git+https://github.com/artpelling/ssm-tools#subdirectory=packages/ssmsolve",
+]
+
+[project.scripts]
+compute-hsv-map = "src.hsv_map:compute_map"
+compute-itd-removed-hsv-map = "src.hsv_map:compute_itd_removed_map"
+compute-bound-error = "src.bound_error:compute_bound_error"
+export-experiment-values = "src.bound_error:export_experiment_values"
+hsv-map = "src.hsv_map:main"
+bound-error = "src.bound_error:main"
+compute-responses = "src.responses:compute"
+responses = "src.responses:main"
+scalability = "src.scalability:main"
+
+[build-system]
+requires = ["uv-build>=0.11.17,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "src"
+module-root = ""
+
+[tool.uv.sources]
+ssmsolve = { git = "https://github.com/artpelling/ssm-tools", subdirectory = "packages/ssmsolve" }
+across = { git = "https://github.com/artpelling/ssm-tools", subdirectory = "packages/across" }
