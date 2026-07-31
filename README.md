@@ -1,4 +1,5 @@
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fartpelling%2Ffa26-hrtf-ssm%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21727073.svg)](https://doi.org/10.5281/zenodo.21727073)
 
 # Code for Numerical Experiments in "State-space modelling of head-related transfer functions"
 
