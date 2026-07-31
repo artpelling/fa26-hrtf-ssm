@@ -31,5 +31,6 @@ module-name = "src"
 module-root = ""
 
 [tool.uv.sources]
-ssmsolve = { git = "https://github.com/artpelling/ssm-tools", subdirectory = "packages/ssmsolve" }
 across = { git = "https://github.com/artpelling/ssm-tools", subdirectory = "packages/across" }
+irdl = { git = "https://github.com/artpelling/irdl", rev = "742f22b17fd6380cc6c5a1483d8987a8a642d90c" }
+ssmsolve = { git = "https://github.com/artpelling/ssm-tools", subdirectory = "packages/ssmsolve" }

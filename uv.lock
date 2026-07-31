@@ -428,7 +428,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "across", git = "https://github.com/artpelling/ssm-tools?subdirectory=packages%2Facross" },
-    { name = "irdl", specifier = ">=1.0.0b4" },
+    { name = "irdl", git = "https://github.com/artpelling/irdl?rev=742f22b17fd6380cc6c5a1483d8987a8a642d90c" },
     { name = "spharpy", specifier = ">=1.0.0" },
     { name = "ssmsolve", git = "https://github.com/artpelling/ssm-tools?subdirectory=packages%2Fssmsolve" },
 ]
@@ -521,10 +521,11 @@ wheels = [
 
 [[package]]
 name = "irdl"
-version = "1.0.0b4"
-source = { registry = "https://pypi.org/simple" }
+version = "1.0.0b5"
+source = { git = "https://github.com/artpelling/irdl?rev=742f22b17fd6380cc6c5a1483d8987a8a642d90c#742f22b17fd6380cc6c5a1483d8987a8a642d90c" }
 dependencies = [
     { name = "h5py" },
+    { name = "netcdf4" },
     { name = "numpydoc" },
     { name = "pooch" },
     { name = "psutil" },
@@ -532,10 +533,6 @@ dependencies = [
     { name = "rich" },
     { name = "sofar" },
     { name = "typer" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c7/3a/cea8977b5d56cb7734076e3b426521ba971fbee7af6a41c692054c2cb7e4/irdl-1.0.0b4.tar.gz", hash = "sha256:d8135901928e0901953dcc49d661056d92eff34b9281d6755d3b8ef3c63f6bcc", size = 39297, upload-time = "2026-06-12T15:05:54.287Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/23/7b8ab9849d52d72180329ef8884c87979e1af4d5180ed8311940cc492d82/irdl-1.0.0b4-py3-none-any.whl", hash = "sha256:bded25b274fd8b66d429c8609ada8906b5ba3dccef279b5034749ee4258d9540", size = 40322, upload-time = "2026-06-12T15:05:55.183Z" },
 ]
 
 [[package]]
@@ -1216,17 +1213,13 @@ wheels = [
 [[package]]
 name = "sofar"
 version = "1.2.3"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/pyfar/sofar.git?rev=verify-stream#07386da50afdf1bcd72cc30eb82c6c5e2fe1769e" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "netcdf4" },
     { name = "numpy" },
     { name = "packaging" },
     { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/fd/2b/dfeea31a5419e1e93dcf1fc3239e12d91772ab74a931d5dd3ae2bf434e90/sofar-1.2.3.tar.gz", hash = "sha256:31058d4460b0577016ce0f5de66376e7e1397b1bddc22e7c7fc036079f63d364", size = 383297, upload-time = "2026-02-03T17:26:06.646Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/b3/eb82436d5f725f4702a1376c7f53578f8f711e1a1d9ba4e7926610cf1dbe/sofar-1.2.3-py3-none-any.whl", hash = "sha256:d1c0813bdb2e56fc820ace5caaeebdbb22d562ae9f7c07af230a32ec71b63327", size = 440088, upload-time = "2026-02-03T17:26:05.222Z" },
 ]
 
 [[package]]
