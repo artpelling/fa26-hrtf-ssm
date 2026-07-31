@@ -1,0 +1,41 @@
+# Generated artifacts
+/generated/*
+!/generated/data/
+/generated/data/*
+!/generated/data/hsv-map.npy
+!/generated/data/hsv-map-itd-removed.npy
+
+# Downloaded datasets
+/data/*
+!/data/.keep
+
+*.png
+*.pdf
+*.eps
+*.svg
+
+# LaTeX build output
+paper/build/
+talk/build/
+paper/tikz/
+talk/tikz/
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.nlo
+*.nls
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+
+# AUCTeX
+.auctex-auto/
+/src/__pycache__/
