@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+title: >-
+  Code for Numerical Experiments in "State-space modelling of head-related
+  transfer functions"
+message: >-
+  "If you use this software, please cite it using the metadata from this file."
+type: software
+authors:
+  - given-names: "Art J. R."
+    family-names: "Pelling"
+    email: "a.pelling@tu-berlin.de"
+    orcid: "https://orcid.org/0000-0003-3228-6069"
+    affiliation: "Department of Engineering Acoustics, Technische Universität Berlin"
+  - given-names: "Ennes"
+    family-names: "Sarradj"
+    affiliation: "Department of Engineering Acoustics, Technische Universität Berlin"
+repository-code: "https://github.com/artpelling/fa26-hrtf-ssm"
+preferred-citation:
+  type: conference-paper
+  title: "State-space modelling of head-related transfer functions"
+  authors:
+    - given-names: "Art J. R."
+      family-names: "Pelling"
+      email: "a.pelling@tu-berlin.de"
+      orcid: "https://orcid.org/0000-0003-3228-6069"
+      affiliation: "Department of Engineering Acoustics, Technische Universität Berlin"
+    - given-names: "Ennes"
+      family-names: "Sarradj"
+      affiliation: "Department of Engineering Acoustics, Technische Universität Berlin"
+  year: 2026
+  conference:
+    name: "Forum Acusticum 2026"
