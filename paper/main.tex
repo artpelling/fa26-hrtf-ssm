@@ -1,0 +1,506 @@
+% ------------------------------------ Forum Acusticum 2026 Migrated from ICASSP 2024 submission
+% ------------------------------------
+\documentclass[non-peer-review]{fa2026}
+
+% Additional packages (amsmath, amssymb, graphicx already loaded by fa2026.cls)
+\usepackage{xparse,subcaption,acronym} \usepackage{amsthm, mathdots, mathtools} \newlength{\hsvmapheight}
+\input{acronyms} \input{../generated/data/experiment-values} \mathtoolsset{mathic=true}
+\newtheorem{theorem}{Theorem}[section] \crefformat{equation}{(#2#1#3)} \crefmultiformat{equation}{(#2#1#3)}{,
+  (#2#1#3)}{, (#2#1#3)}{, and (#2#1#3)} \crefrangeformat{equation}{(#3#1#4--#5#2#6)}
+
+% Math notation commands
+\NewDocumentCommand{\N}{oo}{\ensuremath{\mathbb{N}\IfValueTF{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}{}}}
+\NewDocumentCommand{\R}{oo}{\ensuremath{\mathbb{R}\IfValueTF{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}{}}}
+\NewDocumentCommand{\C}{oo}{\ensuremath{\mathbb{C}\IfValueTF{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}{}}}
+\NewDocumentCommand{\Hardy}{o}{\ensuremath{\mathcal{H}_{#1}}}
+\NewDocumentCommand{\rank}{m}{\ensuremath{\operatorname{rank}\left(#1\right)}}
+\NewDocumentCommand{\diag}{m}{\ensuremath{\operatorname{diag}\left(#1\right)}}
+\NewDocumentCommand{\blkdiag}{m}{\ensuremath{\operatorname{blk\,diag}\left(#1\right)}}
+\NewDocumentCommand{\fnorm}{m}{\ensuremath{\lVert#1\rVert_{\mathrm{F}}}} \NewDocumentCommand{\matA}{}{\mathbf{A}}
+\NewDocumentCommand{\matB}{}{\mathbf{B}} \NewDocumentCommand{\matC}{}{\mathbf{C}}
+\NewDocumentCommand{\matD}{}{\mathbf{D}} \NewDocumentCommand{\matH}{}{\mathbf{H}}
+\NewDocumentCommand{\matI}{}{\mathbf{I}} \NewDocumentCommand{\matP}{}{\mathbf{P}}
+\NewDocumentCommand{\matU}{}{\mathbf{U}} \NewDocumentCommand{\matV}{}{\mathbf{V}}
+\NewDocumentCommand{\matW}{}{\mathbf{W}} \NewDocumentCommand{\matY}{}{\mathbf{Y}}
+\NewDocumentCommand{\matSigma}{}{\boldsymbol{\Sigma}}
+
+% Notation shorthands
+\RenewDocumentCommand{\H}{}{\ensuremath{\mathcal{H}}} % Hankel matrix
+\NewDocumentCommand{\cMat}{}{\ensuremath{\mathcal{C}}} % controllability matrix
+\NewDocumentCommand{\oMat}{}{\ensuremath{\mathcal{O}}} % observability matrix
+
+% ------------------------------------ Title, authors, affiliations ------------------------------------
+\title{State-space modelling of\texorpdfstring{\\}{ }head-related transfer functions}
+
+\author[1]{Art J. R. Pelling} \author[1]{Ennes Sarradj} \correspondingauthor{a.pelling@tu-berlin.de}{Art J. R. Pelling
+  and E. Sarradj}
+
+\affil[1]{Department of Engineering Acoustics, TU Berlin, Einsteinufer 25, 10587 Berlin, Germany}
+
+\addbibresource{local-bib.bib}
+
+% ------------------------------------
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+  State-space models can provide an efficient alternative to convolution-based rendering of head-related transfer
+  functions (HRTFs), but directly identifying reduced state-space models from densely sampled datasets can be
+  computationally infeasible. We present a loss-free projected Eigensystem Realization Algorithm (ERA) formulation for
+  multiple-input multiple-output HRTF datasets, in which sampled directions are inputs and ears are outputs. The
+  projection basis preserves the nonzero Hankel singular values exactly and therefore adds no approximation beyond
+  dynamical order reduction. For finite impulse-response approximations, we prove that both the McMillan degree and the
+  loss-free projection dimension are bounded by the product of the response length and number of outputs, independently
+  of the number of sampled directions, and derive a projection-aware ERA error bound. For the 11\,950-input, 256-sample
+  FABIAN dataset, the input projection to 510 virtual inputs reduces the memory requirements of the economy-SVD ERA-step
+  from 23.2\,GiB to approximately 1.0\,GiB, enabling computation of reduced-order state-space models on virtually any
+  platform. We further show that interaural-time-delay removal accelerates singular-value decay and can greatly improve
+  quality of identified models.
+\end{abstract}
+
+\keywords{model order reduction, balanced truncation, head-related transfer function, auralization, data-driven
+  modelling}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+%
+\section{INTRODUCTION}
+\label{sec:introduction}
+%
+Immersive virtual acoustic rendering requires listener-specific \acp{HRTF} that remain accurate as source and listener
+orientations change \cite{adams2008,moller1992}. Direction-dependent spectral changes and \acp{ITD} support sound source
+localization \cite{georgiou1999,moller1992}. \ac{HRTF} models must therefore accommodate real-time source and head
+motion with adequate directional resolution \cite{adams2008}.
+
+Virtual acoustic rendering commonly selects directionally sampled \acp{HRIR} in the form of \ac{FIR} filters and
+convolves them either in the time or frequency domain, e.g. using the \ac{UPOLS} method \cite{wefers2015}. State-space
+models provide a less widespread alternative that can reduce real-time \ac{MIMO} rendering cost, especially after order
+reduction \cite{adams2007b,adams2008,adams2009a,pelling2021}.
+
+Balanced truncation and \ac{ERA} have produced reduced order state-space \ac{HRTF} models for individual responses and
+multi-direction datasets \cite{mackenzie1997,georgiou1999,grantham2005,adams2007b,adams2008,adams2009a}. They use a truncated
+\ac{SVD} of the Hankel matrix, whose cost grows with the number of measured directions and can become problematic for
+densely sampled \ac{HRTF} datasets \cite{kramer2016,minster2021}. Tangential projection, CUR factorization, and
+randomized \ac{SVD} can reduce this cost by trading approximation quality for efficiency
+\cite{kramer2016,kramer2018,minster2021,pelling2021,pelling2026}. Here, we exploit the special structure of \ac{HRTF} datasets to
+compute a loss-free projected factorization that exactly preserves the Hankel singular values at a greatly reduced cost.
+
+This paper identifies reduced-order \ac{MIMO} state-space models from densely sampled \acp{HRTF}, with measurement
+directions as inputs and ears as outputs. We call \ac{ERA} applied to the full, unprojected Hankel matrix direct
+\ac{ERA}; loss-free projected \ac{ERA} instead uses an exact virtual input basis without tangential truncation, reducing
+only the model's dynamical behaviour, not its spatial fidelity. We prove bounds on the McMillan degree, loss-free
+virtual input dimension, and reduced-model error, and evaluate the method using the FABIAN database
+\cite{brinkmann2017}. We also compare original-delay and \ac{ITD}-removed \acp{HRIR} to assess how delay handling
+affects singular-value decay and modelling error.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+%
+\section{PROJECTED \acs{ERA} for \acp{HRTF}}
+\label{sec:methods}
+%
+In the following, we will consider MIMO discrete-time state-space systems with \(m\in\N\) inputs and \(p\in\N\) outputs.
+Such a system can be described by a so-called \emph{realization} given by the matrix quadruple
+\((\matA,\matB,\matC,\matD)\) with \(\matA\in\R[n][n]\), \(\matB\in\R[n][m]\), \(\matC\in\R[p][n]\), and
+\(\matD\in\R[p][m]\), where \(n\in\N\) is the order of the system. Its dynamics are governed by the discrete-time state
+equations
+%
+\begin{align*}
+  x_{k+1}&=\matA x_k+\matB u_k,\\y_k&=\matC x_k+\matD u_k,
+\end{align*}
+%
+for a causal input \(u\in\ell_{2}^{m}\), output \(y\in\ell_{2}^{p}\) and state \(x\in\ell_{2}^{n}\), where \(\ell_2^d\)
+denotes the square-summable sequences of \(d\)-dimensional vectors and \(k\in\N_0\) is the discrete-time index. Assuming
+a zero initial state, a stable realization, and \(u_k=0\) for \(k<0\), the input-output behaviour is fully described by
+\(y_k=\sum_{\ell\in\N_0}h_\ell u_{k-\ell}\), where the Markov parameters are
+%
+\begin{equation}
+  h_k=
+  \begin{cases}
+    \matD, & k=0,\\
+    \matC\matA^{k-1}\matB, & k\geq1.
+  \end{cases}
+  \label{eq:markov-parameters}
+\end{equation}
+%
+Equivalently, in the frequency domain, the output \(\matY(z)\in\C[p]\) is given by a multiplication of the input
+\(\matU(z)\in\C[m]\) with the transfer function
+%
+\begin{equation*}
+  \matH(z)=\matC(z\matI_n-\matA)^{-1}\matB+\matD,
+\end{equation*}
+%
+where \(z\) is the frequency and \(\matI_n\in\R^{n\times n}\) is the identity.
+
+For the \ac{HRTF} dataset considered below, each measured source direction is an input and the two ears are outputs.
+Thus, one realization shares a state matrix across every direction-ear transfer function, making it a \ac{CAP} model in
+the representational sense of \cite{haneda1999a}.
+%
+%
+\subsection{ERA}
+\label{sec:era}
+%
+In discrete time, the impulse response is the sequence of Markov parameters \cref{eq:markov-parameters}. This
+relationship allows the identification of a matching state-space model from an impulse response sequence
+\((h_0,h_1,\dots,h_{2s-1})\), \(s\in\N\), via the Hankel matrix of Markov parameters
+%
+\begin{equation}
+  \label{eq:H}
+  \H=
+  \begin{bmatrix}
+    \matC\matB & \matC\matA\matB & \cdots & \matC\matA^{s-1}\matB\\
+    \matC\matA\matB & \matC\matA^2\matB &\cdots & \matC\matA^s\matB \\
+    \vdots & \vdots & \iddots &\vdots\\
+    \matC\matA^{s-1}\matB & \matC\matA^{s}\matB & \cdots & \matC\matA^{2s-2}\matB
+  \end{bmatrix}.
+\end{equation}
+%
+The Hankel matrix can be factored into the observability and controllability matrices \(\oMat\in\R[ps][n]\) and
+\(\cMat\in\R[n][ms]\):
+%
+\begin{align*}
+  \H=
+  \underbrace{\begin{bmatrix}
+    \matC\\
+    \vdots\\
+    \matC\matA^{s-1}
+  \end{bmatrix}}_{\eqqcolon \oMat}
+  \underbrace{
+  \begin{bmatrix}
+    \matB&\cdots&\matA^{s-1}\matB
+  \end{bmatrix}}_{\eqqcolon \cMat}\in\R[ps][ms].
+\end{align*}
+%
+From this factorization, a realization can be constructed via
+%
+\begin{equation}
+  \label{eq:realization}
+  \matA=\oMat_{f}^{\dagger}\oMat_{l},~\matB=\cMat
+  \begin{bmatrix}
+    \matI_{m}\\0
+  \end{bmatrix},~\matC=[\matI_p~~0]\oMat,~\matD=h_0,
+\end{equation}
+%
+where \(\oMat_{f}\) and \(\oMat_{l}\) denote the first and last \(p(s-1)\) rows of the observability matrix
+\(\oMat\in\R[ps][n]\), respectively, and \(\dagger\) denotes the Moore--Penrose pseudoinverse \cite{kung1978,juang1985}.
+Classically, the factorization is computed from a (truncated) \acs{SVD}, i.e., for a truncation order
+\(r\leq\min\{ms,\,ps\}\) write the SVD as
+%
+\begin{equation*}
+  \H=
+  \begin{bmatrix}
+    \matU_{r}&\ast
+  \end{bmatrix}
+  \begin{bmatrix}
+    \matSigma_{r}&0\\0&\ast
+  \end{bmatrix}
+  \begin{bmatrix}
+    \matV_{r}^\top\\\ast
+  \end{bmatrix},
+\end{equation*}
+%
+where \(\matU_{r}\in\R[ps][r]\) comprises the first \(r\) left singular vectors as columns,
+\(\matSigma_{r}=\diag{\sigma_{1},\,\dots,\,\sigma_{r}}\) the first \(r\) singular values and \(\matV_{r}\in\R[ms][r]\)
+the first \(r\) right singular vectors as columns. By choosing
+%
+\begin{equation}
+  \label{eq:grams}
+  \oMat=\matU_{r}\matSigma_{r}^{1/2}\quad\text{and}\quad\cMat=\matSigma_{r}^{1/2}\matV_{r}^\top,
+\end{equation}
+%
+the resulting realization is approximately internally balanced \cite{kung1978,schutter2000}. Assuming that the impulse
+response has decayed to negligible magnitude by index \(s\), i.e., \(h_k\approx0\) for \(k>s\), the resulting
+realization is stable \cite{pelling2026,kung1978,kramer2016}. Additionally, the realization given by
+\cref{eq:realization,eq:grams} satisfies the a priori error bound
+%
+\begin{equation}
+  \label{eq:original-bound}
+  \sum_{k=1}^{2s-1}\fnorm{\matC_{r}\matA_{r}^{k-1}\matB_{r}-h_{k}}^2\leq(r+m+p)\cdot\sigma_{r+1}(\H)^2,
+\end{equation}
+%
+where \(\sigma_{r+1}(\H)\) is the first neglected Hankel singular value and \(\fnorm{\cdot}\) is the Frobenius norm
+\cite{pelling2026,kung1978}.
+%
+%
+\subsection{Loss-Free Projected \acs{ERA}}
+\label{sec:tangential}
+%
+By \cref{sec:era}, we can construct reduced order models from \ac{HRIR} datasets\footnote{\acp{HRTF} with equidistant
+  frequency bins can be transformed into \acp{HRIR} with an FFT.}. Recall that \(\H\in\R^{ps\times ms}\). For datasets
+with many input directions, \(m\) is large, which can make the block-Hankel matrix infeasibly wide for a direct \ac{SVD}
+factorization. A natural approach would be to apply tangential projections with a reduced number of inputs in the
+\ac{TERA} framework \cite{kramer2016}. As mentioned, this can accelerate the computations albeit yielding a suboptimal
+reduced order model. As we will show now, the special structure of \acp{HRIR} allows us to omit tangential truncation
+and use an exact basis for the row space of \(\H\) for projection instead.
+
+\acp{HRIR} typically decay within a few milliseconds, so it is common practice to consider \ac{FIR} approximations where
+the \ac{HRIR} is set to zero after some time index \(s\). The following theorem bounds the McMillan degree of an
+\ac{FIR} approximation with \(s\) nonzero samples:
+%
+\begin{theorem}[McMillan degree bound]
+  \label{thm:order-bound}
+  Let \(h_k\in\R[p][m]\), \(k=0,\dots,s\), denote an \ac{FIR}-approximated impulse response sequence with \(h_k=0\) for
+  every \(k>s\). Then, the rational transfer function given by \(\matH_s(z)=\sum_{k=0}^sh_kz^{-k}\) has McMillan degree
+  at most \(ps\). In particular, for a \ac{MIMO}-\ac{HRTF}, \(p=2\) (the two ears), so its McMillan degree is at most
+  \(2s\), independently of the number \(m\) of sampled directions.
+\end{theorem}
+%
+\begin{proof}
+  Let \(\H_\infty=[h_{i+j-1}]_{i,j\geq1}\) be the infinite Hankel matrix of \(\matH_s\). Because the sequence is zero
+  for \(k>s\), \(\H_\infty\) is zero outside its leading \(s\times s\) block, which is \(\H\) in \cref{eq:H}. Thus
+  \(\rank{\H_\infty}=\rank{\H}\leq ps\). The McMillan degree of a rational function equals the rank of its infinite
+  Hankel matrix, proving the result.
+\end{proof}
+%
+This bound is a property of finite \ac{HRIR}, independent of its realization. Thus, it applies whether or not a
+state-space model is constructed. Since \cref{eq:H} captures the Hankel singular values of an \(s\)-sample
+\ac{MIMO}-\ac{HRIR} entirely, retaining its \(r=\rank{\H}\leq2s\) nonzero singular components in \ac{ERA} exactly
+realizes the corresponding zero-extended \ac{HRTF}. Thus, \(2s\) is a worst-case order bound rather than necessarily the
+minimal order. Following input-side \ac{TERA} \cite{kramer2016}, let
+%
+\begin{equation*}
+  \Theta_R=\begin{bmatrix}h_1^\top&\cdots&h_s^\top\end{bmatrix}^\top
+  =\bar{\matU}\bar{\matSigma}\bar{\matV}^\top\in\R[ps][m]
+\end{equation*}
+%
+be its economy \ac{SVD}\footnote{An economy-size/rank-revealing LQ factorization can also be used here.}. The direct
+term is retained without projection, so \(\matD_r=\matD=h_0\). Unlike standard \ac{TERA}, we omit tangential truncation:
+with \(q=\rank{\Theta_R}\), set \(\matW_2=\bar{\matV}\in\R[m][q]\), \(\matP_2=\matW_2\matW_2^\top\), and define the
+projected Markov parameters \(\hat h_k=h_k\matW_2\).
+%
+\begin{theorem}[Loss-free virtual inputs]
+  \label{thm:virtual inputs}
+  Assume \(h_k=0\) for every \(k>s\). Then, \(q\leq\rank{\H}\leq ps\) and \(h_k=h_k\matP_2\) for every \(k\geq1\).
+  Consequently, the projected Hankel matrix constructed from \(\hat h_k=h_k\matW_2\) has the same nonzero Hankel
+  singular values as \cref{eq:H}. For every reduced order, the Markov parameters of the projected and unprojected
+  \acs{ERA} models are identical.
+\end{theorem}
+%
+\begin{proof}
+  \(\Theta_R\) is the first block column of \(\H\), and \(\matW_2\) spans \(\operatorname{range}(\Theta_R^\top)\); hence
+  \(q\leq\rank{\H}\) and \(h_k=h_k\matP_2\). With \(\mathcal{W}=\matI_s\otimes\matW_2\),
+  \(\H=\H\mathcal{W}\mathcal{W}^\top\), so \(\hat{\H}=\H\mathcal{W}\) has the same nonzero singular values.
+  Corresponding truncated \acp{SVD} differ only in their input coordinates; thus \cref{eq:grams} gives the same reduced
+  Markov parameters after backprojection.
+\end{proof}
+
+\Cref{thm:order-bound,thm:virtual inputs} give a projected \ac{ERA} workflow that replaces a large \ac{SVD} of size
+\((2s\times ms)\) by two smaller \acp{SVD} of sizes \((2s\times m)\) and \((2s\times qs)\) that can lead to substantial
+gains when \(q\ll m\): First, compute \(\matP_2\) from the measured data, identify a reduced realization
+\((\matA_r,\hat\matB_r,\matC_r,h_0)\) from \(\hat h\) with \ac{ERA}, then backproject by
+\(\matB_r=\hat\matB_r\matW_2^\top\). The factor \(\matW_2\) of \(\matP_2\) maps a physical input direction \(e_j\) to
+virtual input coefficients \(\matW_2^\top e_j\), encoding each virtual input as a linear combination of input
+directions. For a \acs{HRTF} dataset, \(q\leq2s\), even when additional measured directions are added, so this strategy
+can be applied to \ac{HRTF} datasets of practically any level of spatial fidelity. Finally, the previous rank
+considerations can be used to sharpen the a priori error bound for \ac{ERA}:
+%
+\begin{theorem}[Projection-aware error bound]
+  \label{thm:projected-bound}
+  Under the assumptions of \cref{thm:virtual inputs}, let \((\matA_r,\hat\matB_r,\matC_r,h_0)\) be the order-\(r\)
+  \acs{ERA} realization of \(\hat h\). Its backprojected realization \((\matA_r,\hat\matB_r\matW_2^\top,\matC_r,h_0)\)
+  satisfies
+  \begin{equation*}
+    \sum_{k=1}^{2s-1}\fnorm{\matC_r\matA_r^{k-1}\hat{\matB}_r\matW_2^\top-h_k}^2\leq(r+q+p)\cdot\sigma_{r+1}(\H)^2.
+  \end{equation*}
+\end{theorem}
+%
+\begin{proof}
+  Apply \cref{eq:original-bound} to \(\hat h\), which has \(q\) inputs. By \cref{thm:virtual inputs}, the singular
+  values agree and backprojection preserves the error norm because \(\matW_2\) has orthonormal columns.
+\end{proof}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+%
+\section{EXPERIMENTAL SETUP}
+\label{sec:experimental-setup}
+%
+%
+\subsection{FABIAN Dataset and Preprocessing}
+\label{sec:fabian}
+We use the \(256\)-sample, \(44\,100\,\)Hz \acp{HRIR} for the neutral \acs{HATO} in the FABIAN \acs{HRTF} database
+\cite{brinkmann2017} with \(m=11\,950\) source directions at \(2^{\circ}\) elevation and azimuth increments. We treat
+them as \(h_0,\ldots,h_{255}\) of a \ac{MIMO} discrete-time system with \(p=2\) outputs (the two ears), so \(s=255\)
+non-direct Markov parameters are \(h_1,\ldots,h_{255}\). We zero-extend the sequence by \(h_k=0\) for \(k>s\). Let
+\(h^{(i,j)}\in\R^{2s}\) denote the resulting HRIR from the \(i\)-th source to the \(j\)-th receiver. The \(k\)-th Markov
+parameter contains the \(k\)-th sample of every HRIR, i.e. \(\{h_k\}_{i,j}=h^{(i,j)}_k\in\R[p][m]\). Before system
+identification, the \acp{HRIR} are normalized so that the mean energy of single-channel \acp{HRTF} is one.
+
+%
+%
+\subsection{Delay Handling}
+\label{sec:delay-handling}
+We use two delay-handling conditions. \emph{Original-delay} \acp{HRIR} are normalized, zero-extended responses
+without shifts. For \emph{\ac{ITD}-removed} \acp{HRIR}, we estimate each response onset as the last sample below
+\SI{20}{\decibel} relative to its maximum and shift the response by this estimate\footnote{See
+  \href{https://pyfar.readthedocs.io/en/v0.8.0/modules/pyfar.dsp.html\#pyfar.dsp.find_impulse_response_start}{\texttt{find\_impulse\_response\_start}
+    (pyFAR v0.8.0)}.}. For the FABIAN dataset, this retains \(s=\ITDRemovedLength\) nonzero samples.
+%
+\subsection{Implementation and Timing}
+\label{sec:timing}
+Timings cover \ac{HRIR} preprocessing, projected \ac{ERA} factorization, and reduced-realization construction, excluding
+data loading. Three uncached trials per case ran on an AMD Ryzen~7 8845HS laptop (8 cores, 16 threads; \(14\)\,GiB
+memory) under Arch Linux, Python~3.13, NumPy~2.4.6, and SciPy~1.18.0 with 16 OpenBLAS threads.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+%
+\section{RESULTS}
+\label{sec:results}
+%
+\begin{figure*}[tb]
+  \centering \setlength{\hsvmapheight}{0.263\textwidth}
+  \begin{subfigure}[t]{0.42\textwidth}
+    \centering \includegraphics[height=\hsvmapheight]{../generated/figures/hsv-map.pdf}
+    \subcaption{Original-delay \acp{HRIR}; colors show singular values.}
+    \label{fig:hsv-map}
+  \end{subfigure}\hspace{0\textwidth}
+  \begin{subfigure}[t]{0.42\textwidth}
+    \centering \includegraphics[height=\hsvmapheight]{../generated/figures/hsv-map-itd-removed.pdf}
+    \subcaption{After individual \ac{ITD} removal.}
+    \label{fig:hsv-map-itd-removed}
+  \end{subfigure}\hspace{-0.02\textwidth}
+  \begin{subfigure}[t]{0.10\textwidth}
+    \centering \includegraphics[height=\hsvmapheight]{../generated/figures/hsv-colorbar.pdf}
+  \end{subfigure}
+  \caption{Hankel singular-value maps for neutral-orientation FABIAN \acp{HRIR}. Colors are dB relative to the maximum;
+    red lines mark loss-free virtual input caps and circles \protect\(r=\SelectedModelOrder\).}
+  \label{fig:hsv-maps}
+\end{figure*}
+%
+\subsection{Loss-Free Virtual Input Projection}
+\label{sec:projection-results}
+For the original-delay FABIAN responses, the number of loss-free virtual inputs is \(\OriginalDelayRankBound\); after
+individual \ac{ITD} removal it is \(2\cdot\ITDRemovedLength=\ITDRemovedRankBound\). \Cref{fig:hsv-maps} depicts the Hankel singular values
+decay for a varying (truncating) number of virtual inputs in the \ac{TERA} framework. The red vertical lines mark the
+respective values for \(q\) based on \cref{thm:virtual inputs} at which the input projection becomes loss-free. To the
+right of these, the contours remain horizontal, showing that further virtual inputs leave the Hankel singular values
+unchanged. Several contours are already nearly horizontal to the left of these lines, suggesting that a lossy tangential
+truncation could further reduce the input dimension for a chosen accuracy target. We stick to \(q\) based on
+\cref{thm:virtual inputs} because the computational gains are already sufficient and an exact preservation of the
+\acp{HRTF} is preferable.
+
+\Cref{fig:scalability} shows that direct economy-SVD storage would require \(\DirectSVDMemoryGiB\)\,GiB. Capping
+the virtual input dimension at \(q=\OriginalDelayRankBound\) reduces storage to approximately
+\(\ProjectedSVDMemoryGiB\)\,GiB and full-SVD work by a factor of about \(\SVDWorkReductionFactor\). These savings
+are theoretical, not measured speedups, because the direct factorization exceeded the available memory of our platform.
+%
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=\linewidth]{../generated/figures/scalability.pdf}\\[-0.15\baselineskip]
+  \includegraphics[width=\linewidth]{../generated/figures/scalability-legend.pdf}\\[-0.2\baselineskip]
+  \setlength{\abovecaptionskip}{1pt}
+  \caption{Economy-SVD memory and full-SVD work versus sampled directions, including dense Hankel and economy-size
+    factors. The red line marks the loss-free virtual input cap \protect\(q=\OriginalDelayRankBound\).}
+  \label{fig:scalability}
+\end{figure}
+%
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=\linewidth]{../generated/figures/bound-error.pdf}\\[-0.15\baselineskip]
+  \includegraphics[width=\linewidth]{../generated/figures/bound-error-legend.pdf}\\[-0.2\baselineskip]
+  \setlength{\abovecaptionskip}{1pt}
+  \caption{Hankel singular-value decay, a priori bounds, and relative \acs{HRIR} reconstruction errors for
+    neutral-orientation FABIAN data. Colors distinguish delay handling; line styles distinguish quantities; and circles
+    mark restored-response errors at \protect\(r=\SelectedModelOrder\); the dark curve uses the aligned reference. For
+    \ac{ITD}-removed responses, the bounds apply to the aligned system, so comparison with restored-response errors is
+    empirical.}
+  \label{fig:bound}
+\end{figure}
+%
+\subsection{Effect of \acs{ITD}-Alignment}
+\label{sec:itd-results}
+%
+\Cref{fig:bound} compares singular-value decay, the two a priori bounds, and measured relative \ac{HRIR} reconstruction
+errors. As can be seen from \cref{fig:hsv-maps,fig:bound}, individual \ac{ITD} removal produces a faster singular value
+decay and reduces the relative error at a fixed reduced order. However, the relative error of \ac{ITD}-restored reduced
+order models does not decrease below \SI{\ITDRestoredHighOrderErrorDB}{\decibel}. At \(r=\ITDRestoredCrossoverOrder\),
+the \ac{ITD}-restored models perform worse than the original-delay models. A further increase of model order does not
+improve the error substantially. This, however, does not stem from the projected \ac{ERA} routine but is due to the
+truncation of nonzero values of the \ac{HRIR} when removing the estimated \acp{ITD}. The \ac{ITD}-aligned error also
+depicted in \cref{fig:bound} continues to decay to \SI{\ITDAlignedHighOrderErrorDB}{\decibel} at order
+\(\HighestEvaluatedOrder\), showing that the high-order plateau is not caused by a lack of convergence
+against the aligned reference. An increase in model order does in fact improve the approximation of the \ac{ITD}-removed
+\ac{HRIR} but at a certain point, the error in truncation during removal becomes larger than the error in the model
+reduction.
+
+Earlier \ac{HRTF} work likewise found that alignment or phase correction can reduce effective spatial order
+\cite{ben-hur2019a}, and that \ac{ITD} can degrade reduced state-space models \cite{adams2008,pelling2026}. The present
+result is consistent with these observations, but it does not establish a causal mechanism.
+%
+\subsection{Order Selection}
+\label{sec:response-results}
+%
+The common reduced order \(r=\SelectedModelOrder\) was selected as the lowest order whose original-delay reconstruction
+error is below \SI{-12}{\decibel} (\SI{\OriginalDelayRelativeErrorDB}{\decibel}). This threshold is set arbitrarily and not directly motivated by a perceptual study.
+Earlier \ac{HRTF} state-space studies reported and perceptual order thresholds
+between 7 and 24 for an array of 50 \acp{HRTF} \cite{adams2009a}, but these conditions are not directly comparable with
+the present 11\,950-direction dataset. The literature therefore only contextualizes the order scale; perceptual and
+localization validation is still required.
+
+\Cref{fig:responses} examines the individual left and right responses at azimuth \SI{45}{\degree} and elevation
+\SI{15}{\degree}. The time-domain panel compares the measured responses with the delay-restored, \ac{ITD}-removed
+order-\(\SelectedModelOrder\) model. The magnitude panel compares the measured responses, the original-delay and
+\ac{ITD}-removed models, and the corresponding ear-specific errors. Thus, the individual-response comparison
+complements the aggregate errors in \cref{fig:bound} at the selected common order.
+%
+\begin{figure*}[tb]
+  \centering
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering \includegraphics[width=\linewidth]{../generated/figures/responses-itd-removed-time.pdf}
+    \subcaption{Individual \ac{ITD} removal, time domain.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering \includegraphics[width=\linewidth]{../generated/figures/responses-frequency.pdf}
+    \subcaption{Both delay-handling methods, magnitude domain.}
+  \end{subfigure}\\[-0.25\baselineskip]
+  \begin{subfigure}[t]{\textwidth}
+    \centering \includegraphics[width=\linewidth]{../generated/figures/responses-legend.pdf}
+  \end{subfigure}\\[-0.3\baselineskip]
+  \setlength{\abovecaptionskip}{0pt}
+  \caption{Measured and order-\protect\(\SelectedModelOrder\) FABIAN responses at azimuth \SI{45}{\degree} and elevation
+    \SI{15}{\degree}: (a) the individually \ac{ITD}-removed model in time and (b) both delay-handling methods in
+    magnitude. Black curves are measurements; normal and lighter shades identify reduced models and errors; dashed
+    blue/orange curves are original-delay left/right results.}
+  \label{fig:responses}
+\end{figure*}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+%
+\section{CONCLUSIONS}
+\label{sec:conclusions}
+%
+We presented a projected \ac{ERA} formulation for densely sampled \ac{MIMO} \acp{HRTF}. For finite length-\(s\) \ac{FIR}-\acp{HRIR}, the McMillan degree and loss-free virtual input dimension are bounded by \(2s\), independently of the number
+of sampled directions. This data-driven bound preserves the nonzero Hankel singular values and can also guide
+investigation of other Hankel- or \ac{SVD}-based \ac{HRTF} representations.
+
+For the \(11\,950\)-direction FABIAN dataset, loss-free projection reduces estimated economy SVD storage from \(\DirectSVDMemoryGiB\)\,GiB to approximately
+\(\ProjectedSVDMemoryGiB\)\,GiB, lifting the memory limit of the evaluated laptop platform. The projection-aware error
+bound is correspondingly tighter than the classical \acs{ERA} bound because it uses \(q=510\) rather than all \(m=11\,950\) input
+directions. Individual \ac{ITD} removal accelerated singular-value decay and reduced the relative
+reconstruction error from \SI{\OriginalDelayRelativeErrorDB}{\decibel} to \SI{\ITDRemovedRelativeErrorDB}{\decibel}.
+The study considers one neutral \ac{HATO} of the FABIAN head. Future work should test further \acp{HATO} and directional
+samplings, assess perceptual and localization implications, and evaluate dead-time-splitting extraction
+\cite{pelling2026} for improved real-time rendering.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Source Code Availability}
+The source code used to compute the results is available at
+\href{https://github.com/artpelling/fa26-hrtf-ssm}{\texttt{GitHub:artpelling/fa26-hrtf-ssm}} under the MIT license.
+%
+\section*{Acknowledgements}
+The work of Art J. R. Pelling was funded by DFG (German Research Foundation) – project no.:
+\href{https://gepris.dfg.de/gepris/projekt/504367810?language=en}{504367810}.
+%
+\begingroup
+% \renewcommand*{\bibfont}{\small}
+\printbibliography[title={References}] \endgroup
+%
+\end{document}
