@@ -29,6 +29,7 @@ RESULTS = Path("generated/data/bound-error.npz")
 EXPERIMENT_VALUES = RESULTS.with_name("experiment-values.tex")
 OUTPUT = OUTPUT_DIR / "bound-error.pdf"
 LEGEND = OUTPUT_DIR / "bound-error-legend.pdf"
+VERTICAL_LEGEND = OUTPUT_DIR / "bound-error-legend-vertical.pdf"
 ORDERS = np.sort(np.append(np.arange(32, 513, 32), REDUCED_ORDER))
 Y_LIMITS = (-64, 48)
 Y_TICKS = np.arange(-60, 41, 20)
@@ -218,10 +219,9 @@ def plot(orders, error_orders, original_delay, itd_removed):
     return figure
 
 
-def plot_legend():
-    """Create the compact external legend for the bound/error figure."""
-    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH_IN, 0.9), layout="constrained")
-    axis.axis("off")
+def plot_legend(ncols=2):
+    """Create an external legend for the bound/error figure."""
+    figure = plt.figure(figsize=(COLUMN_WIDTH_IN, 0.9 if ncols == 2 else 1.8))
     handles = [
         Line2D(
             [],
@@ -242,7 +242,7 @@ def plot_legend():
             Line2D([], [], linestyle="none", label=f"Order {REDUCED_ORDER}", **SELECTED_ORDER_MARKER_STYLE),
         )
     )
-    axis.legend(handles=handles, loc="center", ncols=2, frameon=False, fontsize=9)
+    figure.legend(handles=handles, loc="center", ncols=ncols, frameon=False, fontsize=9)
     return figure
 
 
@@ -272,10 +272,13 @@ def main():
     figure.savefig(OUTPUT)
     legend = plot_legend()
     legend.savefig(LEGEND, bbox_inches="tight", pad_inches=0)
+    vertical_legend = plot_legend(ncols=1)
+    vertical_legend.savefig(VERTICAL_LEGEND, bbox_inches="tight", pad_inches=0)
     if not args.no_show:
         plt.show()
     plt.close(figure)
     plt.close(legend)
+    plt.close(vertical_legend)
 
 
 if __name__ == "__main__":

@@ -1,98 +1,27 @@
-\ProvidesPackage{mymathmacros}
+\ProvidesPackage{mymathmacros}[2026/03/24 Math macros shared with paper]
 
-% MATH PREAMBLE
-% ====================================================================================================
-\usepackage{amsmath} \usepackage{amssymb} \usepackage{mathdots}
-\usepackage{mathtools} \mathtoolsset{showonlyrefs, mathic=true}
-\usepackage{xfrac} \usepackage{stackengine} \usepackage{relsize}
-\usepackage{etoolbox} \usepackage{xparse}
-%\usepackage[utopia,cal=cmcal,uppercase=upright,greekuppercase=upright]{mathdesign}
+\RequirePackage{amsmath,amssymb,xcolor}
 
-% ENVIRONMENTS
-% ====================================================================================================
-\newcommand{\figref}[1]{\figurename~\protect\ref{#1}} % use \figref{<label>} to reference figures
-\newcommand{\tabref}[1]{\tablename~\protect\ref{#1}} % use \tabref{<label>} to reference tables
-
-% ARRAYS & MATRICES
-% ====================================================================================================
-\delimitershortfall=0pt \BeforeBeginEnvironment{array}{\left(}
-\AtBeginEnvironment{array}{\renewcommand\arraystretch{1.2}}
-\AfterEndEnvironment{array}{\right)}
-\AtBeginEnvironment{bmatrix}{\renewcommand\arraystretch{1}}
-
-% SETS
-% ====================================================================================================
-\NewDocumentCommand{\R}{oo}{\ensuremath{\mathbb{R}\IfValueTF{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}{}}}
-\NewDocumentCommand{\C}{oo}{\ensuremath{\mathbb{C}\IfValueTF{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}{}}}
-\NewDocumentCommand{\Z}{oo}{\ensuremath{\mathbb{Z}\IfValueTF{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}{}}}
-\NewDocumentCommand{\N}{oo}{\ensuremath{\mathbb{N}\IfValueTF{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}{}}}
-\NewDocumentCommand{\Q}{oo}{\ensuremath{\mathbb{Q}\IfValueTF{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}{}}}
-\NewDocumentCommand{\El}{O{2}}{\ensuremath{\mathscr{L}^{#1}}}
-\NewDocumentCommand{\el}{O{2}}{\ensuremath{\ell^{#1}}}
-
-% VARIABLES
-% ====================================================================================================
-\newcommand{\LRA}{\Leftrightarrow} \newcommand{\RA}{\Rightarrow}
-\newcommand\LRAT[1]{\ensuremath{\stackrel{#1}{\Leftrightarrow}}}
-\newcommand\RAT[1]{\ensuremath{\stackrel{#1}{\Rightarrow}}}
-\newcommand\EQT[1]{\ensuremath{\stackrel{#1}{=}}}
-\newcommand\LEQT[1]{\ensuremath{\stackrel{#1}{\leq}}}
-\newcommand\GEQT[1]{\ensuremath{\stackrel{#1}{\geq}}}
-
-\NewDocumentCommand{\bigO}{m}{\ensuremath{\mathcal{O}(#1)}}
-\DeclareMathOperator*{\argmax}{arg\,max}
-\DeclareMathOperator*{\argmin}{arg\,min}
-\NewDocumentCommand{\norm}{sO{2}m}{\IfBooleanTF#1{\left\lVert#3\right\rVert}{\left\lVert#3\right\rVert_{#2}}} % norm
-\NewDocumentCommand{\hnorm}{O{2}m}{\norm[\Hardy_#1]{#2}} % Hardy norm
-\NewDocumentCommand{\inner}{sO{2}mm}{\IfBooleanTF#1{\langle#3,\,#4\rangle}{\langle#3,\,#4\rangle_{#2}}} % inner product
-\RenewDocumentCommand{\exp}{m}{\ensuremath{e^{#1}}}
-\let\oldlog\log\RenewDocumentCommand{\log}{om}{\ensuremath{\oldlog\IfValueTF{#1}{_{#1}}{}\left(#2\right)}}
-\let\oldln\ln\RenewDocumentCommand{\ln}{m}{\ensuremath{\oldln\left(#1\right)}}
-\let\oldsin\sin\RenewDocumentCommand{\sin}{m}{\ensuremath{\oldsin\left(#1\right)}}
-\let\oldcos\cos\RenewDocumentCommand{\cos}{m}{\ensuremath{\oldcos\left(#1\right)}}
+\NewDocumentCommand{\N}{oo}{\ensuremath{\mathbb{N}\IfValueT{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}}}
+\NewDocumentCommand{\R}{oo}{\ensuremath{\mathbb{R}\IfValueT{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}}}
+\NewDocumentCommand{\C}{oo}{\ensuremath{\mathbb{C}\IfValueT{#1}{\IfValueTF{#2}{^{#1\times#2}}{^#1}}}}
+\NewDocumentCommand{\Hardy}{o}{\ensuremath{\mathcal{H}\IfValueT{#1}{_{#1}}}}
 \NewDocumentCommand{\rank}{m}{\ensuremath{\operatorname{rank}\left(#1\right)}}
 \NewDocumentCommand{\diag}{m}{\ensuremath{\operatorname{diag}\left(#1\right)}}
 \NewDocumentCommand{\blkdiag}{m}{\ensuremath{\operatorname{blk\,diag}\left(#1\right)}}
-\NewDocumentCommand{\trace}{m}{\ensuremath{\operatorname{trace}\left(#1\right)}}
-\RenewDocumentCommand{\Re}{m}{\operatorname{Re}\left\{#1\right\}}
-\RenewDocumentCommand{\Im}{m}{\operatorname{Im}\left\{#1\right\}}
+\NewDocumentCommand{\fnorm}{m}{\ensuremath{\lVert#1\rVert_{\mathrm{F}}}}
 
-\newcommand{\intset}[2][1]{\left\{#1,\,\dots\,,#2\right\}}
+\NewDocumentCommand{\matA}{}{\mathbf{A}}
+\NewDocumentCommand{\matB}{}{\mathbf{B}}
+\NewDocumentCommand{\matC}{}{\mathbf{C}}
+\NewDocumentCommand{\matD}{}{\mathbf{D}}
+\NewDocumentCommand{\matH}{}{\mathbf{H}}
+\NewDocumentCommand{\matI}{}{\mathbf{I}}
+\NewDocumentCommand{\matP}{}{\mathbf{P}}
+\NewDocumentCommand{\matU}{}{\mathbf{U}}
+\NewDocumentCommand{\matV}{}{\mathbf{V}}
+\NewDocumentCommand{\matW}{}{\mathbf{W}}
+\NewDocumentCommand{\matY}{}{\mathbf{Y}}
+\NewDocumentCommand{\matSigma}{}{\boldsymbol{\Sigma}}
 
-% UNITS
-% ====================================================================================================
-\usepackage{siunitx}
-%\sisetup{output-exponent-marker=\ensuremath{\mathrm{e}}}
-\NewDocumentCommand{\dB}{}{\,\unit{\decibel}}
-\NewDocumentCommand{\seconds}{}{\,\unit{\second}}
-\NewDocumentCommand{\Hz}{}{\,\unit{\hertz}}
-\NewDocumentCommand{\kHz}{}{\,\unit{\kilo\hertz}}
-\NewDocumentCommand{\m}{}{\,\unit{\metre}}
-\NewDocumentCommand{\cm}{}{\,\unit{\centi\metre}}
-\NewDocumentCommand{\mm}{}{\,\unit{\milli\metre}}
-\NewDocumentCommand{\Pa}{}{\,\unit{\pascal}}
-
-\NewDocumentCommand{\regtm}{}{\textsuperscript{(R)}}
-\NewDocumentCommand{\tm}{}{\textsuperscript{\texttrademark}}
-
-\renewcommand{\d}{\,\mathrm{d}}
-\renewcommand{\i}{\mathrm{i}}
-\NewDocumentCommand{\conj}{m}{\overline{#1}}
-
-% COLOURS
-% ====================================================================================================
-\usepackage{xcolor}
-
-\makeatletter
-\def\mathcolor#1#{\@mathcolor{#1}}
-\def\@mathcolor#1#2#3{%
-  \protect\leavevmode
-  \begingroup
-  \color#1{#2}#3%
-  \endgroup
-}
-\makeatother
-
-\NewDocumentCommand{\blue}{m}{\mathcolor{blue}{#1}}
-\NewDocumentCommand{\green}{m}{\mathcolor{red}{#1}}
-\NewDocumentCommand{\red}{m}{\mathcolor{green}{#1}}
+\NewDocumentCommand{\blue}{m}{\textcolor{blue}{#1}}

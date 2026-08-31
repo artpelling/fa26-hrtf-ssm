@@ -1,47 +1,5 @@
-\ProvidesPackage{mynotation}
+\ProvidesPackage{mynotation}[2026/03/24 Notation shared with paper]
 
-\newcommand{\newnotation}[2]{\NewDocumentCommand{#1}{}{\ensuremath{#2}}}
-\newcommand{\renewnotation}[2]{\RenewDocumentCommand{#1}{}{\ensuremath{#2}}}
-
-% GENERAL
-% ====================================================================================================
-\renewnotation{\d}{\mathrm{d}}
-
-% SYSTEM THEORY
-% ====================================================================================================
-\newnotation{\tf}{\mathbf{G}} % transfer-function
-\newnotation{\sys}{\mathbf{\Sigma}} % system
-\newnotation{\tfsp}{\tf_{\mathrm{sp}}} % strictly proper part of transfer function
-
-\newnotation{\MT}{\mathfrak{m}} % Moebius transformation
-
-\renewnotation{\H}{\mathcal{H}} % Hankel matrix
-\renewnotation{\L}{\mathbb{L}} % Loewner matrix
-\newnotation{\Ls}{\mathbb{L}_s} % shifted Loewner matrix
-\newnotation{\cG}{P} % controllability Gramian
-\newnotation{\cGSF}{U} % controllability Gramian square-root factor
-\newnotation{\oG}{Q} % observability Gramian
-\newnotation{\cMat}{\mathcal{C}} % observability matrix
-\newnotation{\oGSF}{L} % observability Gramian square-root factor
-\newnotation{\oMat}{\mathcal{O}} % observability matrix
-
-% REDUCED QUANTITIES
-% ====================================================================================================
-\newnotation{\tfr}{\conj{\tf}}
-\newnotation{\Ar}{\conj{A}}
-\newnotation{\Br}{\conj{B}}
-\newnotation{\Cr}{\conj{C}}
-\newnotation{\Dr}{\conj{D}}
-
-% ALGORITHMS
-% ====================================================================================================
-\newnotation{\MOR}{\textsf{MoR}}
-\newnotation{\ROM}{\textsf{RoM}}
-\newnotation{\FOM}{\textsf{FoM}}
-\newnotation{\LTI}{\textsf{LTI}}
-\newnotation{\SPD}{\textsf{SPD}}
-\newnotation{\SVD}{\textsf{SVD}}
-\newnotation{\BT}{\textsf{BT}}
-\newnotation{\QuadBT}{\textsf{QuadBT}}
-\newnotation{\SPA}{\textsf{SPA}}
-\newnotation{\GSPA}{\textsf{GSPA}}
+\RenewDocumentCommand{\H}{}{\ensuremath{\mathcal{H}}} % Hankel matrix
+\NewDocumentCommand{\cMat}{}{\ensuremath{\mathcal{C}}} % controllability matrix
+\NewDocumentCommand{\oMat}{}{\ensuremath{\mathcal{O}}} % observability matrix

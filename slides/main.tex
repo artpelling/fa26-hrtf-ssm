@@ -8,7 +8,8 @@
 
 % USER CONFIG
 \usepackage{mypackages}
-\usepackage{mymathmacros} \usepackage{mynotation}
+\usepackage{mymathmacros}
+\usepackage{mynotation}
 
 \graphicspath{{./figures},{../generated/figures}}
 
@@ -21,6 +22,15 @@
 \institute{Department of Engineering Acoustics, TU Berlin}
 \newcommand{\grant}{DFG project no.: 504367810}
 
+\usepackage[skins]{tcolorbox}
+
+\NewDocumentEnvironment{ttcbox}{b}{\centering\begin{tcolorbox}[enhanced,width=5in,center upper,
+    fontupper=\large\bfseries,drop fuzzy shadow southwest,
+    boxrule=0.4pt,sharp corners,colframe=yellow!80!black,colback=yellow!10]#1}{\end{tcolorbox}}
+\NewDocumentEnvironment{ttcboxs}{b}{\centering\begin{tcolorbox}[enhanced,width=\textwidth,center upper,
+    fontupper=\large\bfseries,drop fuzzy shadow southwest,
+    boxrule=0.4pt,sharp corners,colframe=yellow!80!black,colback=yellow!10]#1}{\end{tcolorbox}}
+
 \begin{document}
 %
 \begin{frame}
@@ -30,8 +40,8 @@
 \begin{frame}{Linear Time-Invariant Systems\only<2>{ - discrete-time}}
   \only<1>
   {
-    Let $u,y \in \mathcal{L}_2(\mathbb{R})$, a system
-    \(\Sigma:\mathcal{L}_2(\mathbb{R}) \rightarrow \mathcal{L}_2(\mathbb{R})\)
+    Let $u,y \in \mathcal{L}_2(\R)$, a system
+    \(\Sigma:\mathcal{L}_2(\R) \rightarrow \mathcal{L}_2(\R)\)
     is
     a mapping $\Sigma(u) \mapsto y$
     \begin{figure}
@@ -40,7 +50,9 @@
     \begin{itemize}
       \item Linearity:
             \[
-              \Sigma(\alpha u_1 + u_2)=\alpha\Sigma(u_1)+\Sigma(u_2),\quad\alpha \in \mathbb{R}
+              \Sigma(\alpha u_1 + u_2) = \alpha\Sigma(u_1)
+                                         + \Sigma(u_2),\quad\alpha
+                                       \in \R
             \]
       \item Time-invariance:
             \[
@@ -48,12 +60,12 @@
             \]
     \end{itemize}
     Dynamics of LTI systems are fully described by impulse response
-    $h = \Sigma(\delta) \in \mathcal{L}_2(\mathbb{R})$:
+    $h = \Sigma(\delta) \in \mathcal{L}_2(\R)$:
     \begin{itemize}
       \item Convolution:
             \[
               \Sigma(u(t)) = (h \ast u)(t)
-                           = \int_{-\infty}^\infty h(t - \tau)u(\tau)d\tau
+                           = \int_{-\infty}^\infty h(t - \tau)u(\tau)\,\mathrm{d}\tau
                            = y(t)
             \]
     \end{itemize}
@@ -69,7 +81,9 @@
     \begin{itemize}
       \item Linearity:
             \[
-              \Sigma(\alpha u_1 + u_2)=\alpha\Sigma(u_1)+\Sigma(u_2),\quad\alpha \in \mathbb{R}
+              \Sigma(\alpha u_1 + u_2) = \alpha\Sigma(u_1)
+                                         + \Sigma(u_2),\quad\alpha
+                                       \in \R
             \]
       \item Time-invariance:
             \[
@@ -81,7 +95,8 @@
     \begin{itemize}
       \item Convolution:
             \[
-              \Sigma(u(t)) = (h \ast u)(t) = \blue{\sum_{k\in\mathbb{Z}}h(t-k)u(k)} = y(t)
+              y_k = \Sigma(u)_k
+                  = \blue{\sum_{\ell\in\N_0} h_\ell u_{k-\ell}}
             \]
     \end{itemize}
   }
@@ -90,29 +105,74 @@
 \begin{frame}
   \frametitle{Frequency Domain Description} \(z\)-transform of impulse response:
   \[
-    \mathcal{Z}\{h(t)\} = H(z) = \sum_{k \in \mathbb{Z}}h(k)z^{-k}
+    \mathcal{Z}\{h_k\} = \matH(z) = \sum_{k \in \mathbb{Z}} h_k z^{-k}
   \]
-  Transmission is given by transfer function \(H(z)\):
+  Transmission is given by the transfer function \(\matH(z)\):
   \[
-    Y(z) = \mathcal{Z}\{y(t)\}
-         = \mathcal{Z}\{h(t)\}
-           \cdot \mathcal{Z}\{u(t)\}
-         = H(z)
-           \cdot U(z)
+    \matY(z) = \mathcal{Z}\{y_k\}
+             = \matH(z)\matU(z)
   \]
   Common representations:
   \begin{itemize}
     \item Rational:
           \[
-            H(z) = \frac{\sum_{k=0}^{N}b_kz^{-k}}{1-\sum_{k=1}^{M}a_{k}z^{-k}}
-            \onslide<2>{\quad \rightarrow \quad\text{barycentric form}:~\frac{\sum_{k=0}^{K}\frac{\alpha_{k}}{z-t_k}}{\sum_{k=0}^K\frac{\beta_k}{z-t_k}}}
+            \matH(z)
+            = \frac{\sum_{k=0}^{N}b_kz^{-k}}{1 - \sum_{k=1}^{M}a_{k}z^{-k}} \onslide
+            < 2
+            > {\quad \rightarrow \quad\text{barycentric form}:~\frac{\sum_{k=0}^{K}\frac{\alpha_{k}}{z - t_k}}{\sum_{k=0}^K\frac{\beta_k}{z - t_k}}}
           \]
           \onslide<2>{\footcite{trefethen2013}}
     \item Pole-residue:
           \[
-            H(z) = \sum_{k = 1}^{K}\frac{c_kb_k}{z-\lambda_k}
+            \matH(z) = \sum_{k=1}^{K}\frac{c_kb_k}{z - \lambda_k}
           \]
   \end{itemize}
+\end{frame}
+%
+\begin{frame}{State-Space Realizations}
+  \begin{itemize}
+    \item \textbf{External description} (\(h_k, \matH(z)\))\hfill vs.\hfill \textbf{internal description} (state \(x_k\))
+  \end{itemize}
+  \begin{ttcbox}
+    Discrete-time state equations:
+    \[
+      \begin{gathered}
+        x_{k+1} = \matA x_k + \matB u_k, \qquad
+        y_k = \matC x_k + \matD u_k, \\
+        \matA \in \R[n][n],\quad \matB \in \R[n][m], \\
+        \matC \in \R[p][n],\quad \matD \in \R[p][m]
+      \end{gathered}
+    \]
+  \end{ttcbox}
+  \begin{itemize}
+    \item Markov parameters: \(h_0 = \matD\), \(h_k = \matC\matA^{k-1}\matB\) for \(k \geq 1\)
+    \item Transfer function: \(\matH(z) = \matC(z\matI_n - \matA)^{-1}\matB + \matD\)
+  \end{itemize}
+\end{frame}
+%
+\begin{frame}
+  \frametitle{McMillan degree bound}
+  \begin{theorem}
+    \label{thm:order-bound}
+    Let \(h_k \in \R[p][m]\), \(k = 0,\dots,s\), denote an FIR-approximated
+    impulse response sequence with \(h_k = 0\) for every \(k > s\). Then, the
+    rational transfer function given by \(\matH_s(z) = \sum_{k=0}^sh_kz^{-k}\)
+    has McMillan degree at most \(ps\). In particular, for a MIMO-HRTF,
+    \(p = 2\) (the two ears), so its McMillan degree is at most \(2s\),
+    independently of the number \(m\) of sampled directions.
+  \end{theorem}
+\end{frame}
+%
+\begin{frame}
+  \frametitle{Loss-free virtual inputs}
+  \begin{theorem}
+    \label{thm:virtual inputs}
+    Assume \(h_k = 0\) for every \(k > s\). Then, \(q \leq \rank{\H} \leq ps\)
+    and \(h_k = h_k\matP_2\) for every \(k \geq 1\). Consequently, the projected
+    Hankel matrix constructed from \(\hat h_k = h_k\matW_2\) has the same
+    nonzero Hankel singular values as \(\H\). For every reduced order, the
+    Markov parameters of the projected and unprojected ERA models are identical.
+  \end{theorem}
 \end{frame}
 %
 \begin{frame}
@@ -128,7 +188,7 @@
   \frametitle{Hankel Singular Values: ITD removed}
   \vfill
   \centering
-  \includegraphics{hsv-map-itd-removed.pdf}
+  \includegraphics{hsv-map-itd-removed-slides.pdf}
   \includegraphics{hsv-colorbar.pdf}
   \vfill
 \end{frame}
@@ -137,13 +197,14 @@
   \frametitle{Relative Error}
   \vfill
   \centering
-  \includegraphics[width=.6\textwidth]{bound-error.pdf}
-  \includegraphics[width=.5\textwidth]{bound-error-legend.pdf}
+  \includegraphics[width=.65\textwidth]{bound-error.pdf}
+  \includegraphics[width=.3\textwidth]{bound-error-legend-vertical.pdf}
   \vfill
 \end{frame}
 %
 \begin{frame}[allowframebreaks]{References}
-  \footnotesize \printbibliography
+  \footnotesize
+  \printbibliography
 \end{frame}
 %
 \end{document}
