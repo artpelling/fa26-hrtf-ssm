@@ -49,7 +49,12 @@ paper: figures $(EXPERIMENT_VALUES)
 	mkdir -p paper/build
 	cd paper && latexmk main.tex
 
+slides: figures $(EXPERIMENT_VALUES)
+	mkdir -p slides/build
+	cd slides && latexmk main.tex
+
 clean:
 	cd paper && latexmk -C main.tex
+	cd slides && latexmk -C main.tex
 	find generated paper/tikz -type f ! -name '.keep' -delete 2>/dev/null || true
 	find generated paper/tikz -depth -type d -empty -delete 2>/dev/null || true

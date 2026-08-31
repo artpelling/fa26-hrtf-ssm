@@ -104,11 +104,10 @@
   \begin{itemize}
     \item Rational:
           \[
-            H(z) = \frac{\sum_{k=0}^{N}b_kz^{-k}}{1-\sum_{k=1}^{M}a_{k}z^{-k}}\onslide
-                 < 2
-                 > {\quad \rightarrow \quad\text{barycentric
-          form}\footcite{trefethen2013}:~\frac{\sum_{k=0}^{K}\frac{\alpha_{k}}{z-t_k}}{\sum_{k=0}^K\frac{\beta_k}{z-t_k}}}
+            H(z) = \frac{\sum_{k=0}^{N}b_kz^{-k}}{1-\sum_{k=1}^{M}a_{k}z^{-k}}
+            \onslide<2>{\quad \rightarrow \quad\text{barycentric form}:~\frac{\sum_{k=0}^{K}\frac{\alpha_{k}}{z-t_k}}{\sum_{k=0}^K\frac{\beta_k}{z-t_k}}}
           \]
+          \onslide<2>{\footcite{trefethen2013}}
     \item Pole-residue:
           \[
             H(z) = \sum_{k = 1}^{K}\frac{c_kb_k}{z-\lambda_k}
