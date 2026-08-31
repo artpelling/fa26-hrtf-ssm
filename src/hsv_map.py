@@ -149,6 +149,7 @@ def main():
     for path, filename, ylabel in (
         (HSV_MAP, "hsv-map.pdf", True),
         (ITD_REMOVED_HSV_MAP, "hsv-map-itd-removed.pdf", False),
+        (ITD_REMOVED_HSV_MAP, "hsv-map-itd-removed-slides.pdf", True),
     ):
         figure = plot_hsv_map(np.load(path), ylabel=ylabel)
         figure.savefig(OUTPUT_DIR / filename)
