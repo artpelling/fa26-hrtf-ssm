@@ -30,6 +30,8 @@ EXPERIMENT_VALUES = RESULTS.with_name("experiment-values.tex")
 OUTPUT = OUTPUT_DIR / "bound-error.pdf"
 LEGEND = OUTPUT_DIR / "bound-error-legend.pdf"
 VERTICAL_LEGEND = OUTPUT_DIR / "bound-error-legend-vertical.pdf"
+SLIDE_OUTPUT = Path("slides/figures/relative-error.pdf")
+SLIDE_VERTICAL_LEGEND = Path("slides/figures/relative-error-legend-vertical.pdf")
 ORDERS = np.sort(np.append(np.arange(32, 513, 32), REDUCED_ORDER))
 Y_LIMITS = (-64, 48)
 Y_TICKS = np.arange(-60, 41, 20)
@@ -162,23 +164,26 @@ def compute_bound_error():
     )
 
 
-def plot(orders, error_orders, original_delay, itd_removed):
-    """Overlay original-delay and ITD-removed ERA bounds on shared axes."""
+def plot(orders, error_orders, original_delay, itd_removed, include_bounds=True, y_limits=Y_LIMITS):
+    """Plot original-delay and ITD-removed ERA errors, optionally with bounds."""
     figure, axis = plt.subplots(
         figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN / GOLDEN_RATIO), layout="constrained"
     )
     golden_axes(axis)
     for values, color_family in ((original_delay, "no_removal"), (itd_removed, "itd_removal")):
         hsv, corrected_bound, _, proposed_bound, errors, *extra_errors = values
-        for (x, y), (_, linestyle, shade) in zip(
+        curves = (
             (
                 (np.arange(1, len(hsv) + 1), hsv),
                 (orders, corrected_bound),
                 (orders, proposed_bound),
                 (error_orders, errors),
-            ),
-            BOUND_STYLES,
-        ):
+            )
+            if include_bounds
+            else ((error_orders, errors),)
+        )
+        styles = BOUND_STYLES if include_bounds else (BOUND_STYLES[-1],)
+        for (x, y), (_, linestyle, shade) in zip(curves, styles):
             axis.plot(x, dB(y), color=plot_color(color_family, shade), linestyle=linestyle)
         marker_mask = error_orders != REDUCED_ORDER
         axis.plot(
@@ -210,8 +215,8 @@ def plot(orders, error_orders, original_delay, itd_removed):
         xlabel="Model order",
         ylabel="Relative error in dB",
         xlim=(1, len(original_delay[0])),
-        ylim=Y_LIMITS,
-        yticks=Y_TICKS,
+        ylim=y_limits,
+        yticks=np.arange(y_limits[0], y_limits[1] + 1, 20),
     )
     axis.minorticks_on()
     axis.grid(which="major", alpha=0.3)
@@ -219,7 +224,7 @@ def plot(orders, error_orders, original_delay, itd_removed):
     return figure
 
 
-def plot_legend(ncols=2):
+def plot_legend(ncols=2, include_bounds=True):
     """Create an external legend for the bound/error figure."""
     figure = plt.figure(figsize=(COLUMN_WIDTH_IN, 0.9 if ncols == 2 else 1.8))
     handles = [
@@ -228,11 +233,13 @@ def plot_legend(ncols=2):
             [],
             color="0.2",
             linestyle=linestyle,
-            marker=BOUND_MARKERS[-1] if index == len(BOUND_STYLES) - 1 else None,
+            marker=BOUND_MARKERS[-1] if label == "HRIR error" else None,
             markerfacecolor="none",
             label=label,
         )
-        for index, (label, linestyle, _) in enumerate(BOUND_STYLES)
+        for index, (label, linestyle, _) in enumerate(
+            BOUND_STYLES if include_bounds else (BOUND_STYLES[-1],)
+        )
     ]
     handles.extend(
         (
@@ -252,6 +259,8 @@ def main():
     args = parser.parse_args()
 
     with np.load(RESULTS) as results:
+        orders = results["orders"]
+        error_orders = results["error_orders"]
         original_delay = (
             results["hsv"],
             results["corrected_bound"],
@@ -267,18 +276,27 @@ def main():
             results["itd_errors"],
             results["itd_aligned_errors"],
         )
-        figure = plot(results["orders"], results["error_orders"], original_delay, itd_removed)
+        figure = plot(orders, error_orders, original_delay, itd_removed)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     figure.savefig(OUTPUT)
     legend = plot_legend()
     legend.savefig(LEGEND, bbox_inches="tight", pad_inches=0)
     vertical_legend = plot_legend(ncols=1)
     vertical_legend.savefig(VERTICAL_LEGEND, bbox_inches="tight", pad_inches=0)
+    SLIDE_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    slide_figure = plot(
+        orders, error_orders, original_delay, itd_removed, include_bounds=False, y_limits=(-60, 0)
+    )
+    slide_figure.savefig(SLIDE_OUTPUT)
+    slide_legend = plot_legend(ncols=1, include_bounds=False)
+    slide_legend.savefig(SLIDE_VERTICAL_LEGEND, bbox_inches="tight", pad_inches=0)
     if not args.no_show:
         plt.show()
     plt.close(figure)
     plt.close(legend)
     plt.close(vertical_legend)
+    plt.close(slide_figure)
+    plt.close(slide_legend)
 
 
 if __name__ == "__main__":

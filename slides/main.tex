@@ -11,6 +11,9 @@
 \usepackage{mymathmacros}
 \usepackage{mynotation}
 
+\usetikzlibrary{fit,shapes.geometric}
+\usepackage{xfp}
+
 \graphicspath{{./figures},{../generated/figures}}
 
 \addbibresource{references.bib}
@@ -24,12 +27,117 @@
 
 \usepackage[skins]{tcolorbox}
 
-\NewDocumentEnvironment{ttcbox}{b}{\centering\begin{tcolorbox}[enhanced,width=5in,center upper,
+\newtcbox{\ttcbox}[1][]{nobeforeafter,tcbox raise base,
+  enhanced,fontupper=\large\bfseries,drop fuzzy shadow southwest,
+  boxrule=0.4pt,sharp corners,colframe=yellow!80!black,colback=yellow!10,#1}
+
+\NewDocumentCommand{\systemmatrix}{s O{1} mmm}{%
+  \begingroup
+  \edef\matrixgap{\fpeval{0.15/#2}}%
+  \edef\matrixunit{\fpeval{min(0.5,10.5/(#3+#4))}}%
+  \edef\nwidth{\fpeval{#3*\matrixunit}}%
+  \edef\mwidth{\fpeval{#4*\matrixunit}}%
+  \edef\pheight{\fpeval{#5*\matrixunit}}%
+  \edef\matrixwidth{\fpeval{\nwidth+\matrixgap+\mwidth}}%
+  \edef\matrixheight{\fpeval{\nwidth+\matrixgap+\pheight}}%
+  \edef\xLeft{\fpeval{-\matrixwidth/2}}%
+  \edef\xMid{\fpeval{\xLeft+\nwidth}}%
+  \edef\xBLeft{\fpeval{\xMid+\matrixgap}}%
+  \edef\xRight{\fpeval{\xBLeft+\mwidth}}%
+  \edef\yTop{\fpeval{\matrixheight/2}}%
+  \edef\yMid{\fpeval{\yTop-\nwidth}}%
+  \edef\yLowerTop{\fpeval{\yMid-\matrixgap}}%
+  \edef\yBottom{\fpeval{\yLowerTop-\pheight}}%
+  \edef\xACenter{\fpeval{(\xLeft+\xMid)/2}}%
+  \edef\xBCenter{\fpeval{(\xBLeft+\xRight)/2}}%
+  \edef\yTopCenter{\fpeval{(\yMid+\yTop)/2}}%
+  \edef\yBottomCenter{\fpeval{(\yBottom+\yLowerTop)/2}}%
+  \edef\xLabel{\fpeval{\xLeft-.2}}%
+  \edef\yLabel{\fpeval{\yBottom-.2}}%
+  \begin{tikzpicture}[scale=#2, transform shape]
+  \path[draw, line width=.2pt, fill=red!20]
+  (\xLeft,\yMid) rectangle (\xMid,\yTop);
+  \path[draw, line width=.2pt, fill=blue!20]
+  (\xBLeft,\yMid) rectangle (\xRight,\yTop);
+  \path[draw, line width=.2pt, fill=green!20]
+  (\xLeft,\yBottom) rectangle (\xMid,\yLowerTop);
+  \path[draw, line width=.2pt, fill=orange!25]
+  (\xBLeft,\yBottom) rectangle (\xRight,\yLowerTop);
+  \IfBooleanT{#1}{
+    \node[align=center] at (\xACenter,\yTopCenter)
+    {\Large\(\textcolor{red!80!black}{\matA}\)\\[-.3em]
+      \scriptsize\(\textcolor{blue}{n} \times \textcolor{blue}{n}\)};
+    \node[align=center] at (\xBCenter,\yTopCenter)
+    {\Large\(\textcolor{blue!70!black}{\matB}\)\\[-.3em]
+      \scriptsize\(\textcolor{blue}{n} \times \textcolor{violet}{m}\)};
+    \node[align=center] at (\xACenter,\yBottomCenter)
+    {\Large\(\textcolor{green!50!black}{\matC}\)\\[-.3em]
+      \scriptsize\(\textcolor{teal!70!black}{p} \times \textcolor{blue}{n}\)};
+    \node[align=center] at (\xBCenter,\yBottomCenter)
+    {\Large\(\textcolor{orange!80!black}{\matD}\)\\[-.3em]
+      \scriptsize\(\textcolor{teal!70!black}{p} \times \textcolor{violet}{m}\)};
+    \node[anchor=east] at (\xLabel,\yTopCenter) {\(\textcolor{blue}{n=#3}\)};
+    \node[anchor=east] at (\xLabel,\yBottomCenter)
+    {\(\textcolor{teal!70!black}{p=#5}\)}; \node[anchor=north] at
+    (\xACenter,\yLabel) {\(\textcolor{blue}{n=#3}\)}; \node[anchor=north] at
+    (\xBCenter,\yLabel) {\(\textcolor{violet}{m=#4}\)};
+  }
+  \end{tikzpicture}%
+  \endgroup
+}
+\NewDocumentCommand{\hankelmatrix}{s O{1} mmm}{%
+  \begingroup
+  \edef\hankelunit{\fpeval{min(0.45,min(10.5/(#3*#4),4/(#3*#5)))}}%
+  \edef\hankelxunit{\fpeval{#4*\hankelunit}}%
+  \edef\hankelyunit{\fpeval{#5*\hankelunit}}%
+  \edef\hankelgap{0.04}%
+  \edef\hankelwidth{#3}%
+  \edef\hankelheight{#3}%
+  \begin{tikzpicture}[
+    x=\hankelxunit cm,
+    y=\hankelyunit cm,
+    scale=#2,
+    transform shape,
+    baseline=(current bounding box.center)
+  ]
+  \foreach \row in {1,...,#3}
+  {
+    \foreach \col in {1,...,#3}
+    {
+      \pgfmathtruncatemacro{\blockindex}{\row+\col-1}
+      \pgfmathtruncatemacro{\colorindex}{mod(\blockindex-1,6)}
+      \ifcase\colorindex\def\blockcolor{red!20}%
+      \or\def\blockcolor{blue!20}%
+      \or\def\blockcolor{green!20}%
+      \or\def\blockcolor{orange!25}%
+      \or\def\blockcolor{violet!20}%
+      \or\def\blockcolor{cyan!20}%
+      \fi
+      \path[draw, line width=.2pt, fill=\blockcolor]
+      ({\col-1+\hankelgap/2},{-(\row-1)-\hankelgap/2})
+      rectangle
+      ({\col-\hankelgap/2},{-\row+\hankelgap/2});
+      \IfBooleanT{#1}{
+        \node[font=\scriptsize] at ({\col-.5},{-(\row-.5)})
+        {\(h_{\blockindex}\)};
+      }
+    }
+  }
+  \draw[line width=.5pt]
+  (-.1,.1) -- (-.3,.1) -- (-.3,{-\hankelheight-.1}) --
+  (-.1,{-\hankelheight-.1});
+  \draw[line width=.5pt]
+  ({\hankelwidth+.1},.1) -- ({\hankelwidth+.3},.1) --
+  ({\hankelwidth+.3},{-\hankelheight-.1}) --
+  ({\hankelwidth+.1},{-\hankelheight-.1});
+  \end{tikzpicture}%
+  \endgroup
+}
+\NewDocumentEnvironment{ttcboxs}{b}{\centering\begin{tcolorbox}[
+    enhanced,width=\textwidth,center upper,
     fontupper=\large\bfseries,drop fuzzy shadow southwest,
-    boxrule=0.4pt,sharp corners,colframe=yellow!80!black,colback=yellow!10]#1}{\end{tcolorbox}}
-\NewDocumentEnvironment{ttcboxs}{b}{\centering\begin{tcolorbox}[enhanced,width=\textwidth,center upper,
-    fontupper=\large\bfseries,drop fuzzy shadow southwest,
-    boxrule=0.4pt,sharp corners,colframe=yellow!80!black,colback=yellow!10]#1}{\end{tcolorbox}}
+    boxrule=0.4pt,sharp corners,colframe=yellow!80!black,colback=yellow!10
+  ]#1}{\end{tcolorbox}}
 
 \begin{document}
 %
@@ -37,174 +145,525 @@
   \maketitle
 \end{frame}
 %
-\begin{frame}{Linear Time-Invariant Systems\only<2>{ - discrete-time}}
-  \only<1>
-  {
-    Let $u,y \in \mathcal{L}_2(\R)$, a system
-    \(\Sigma:\mathcal{L}_2(\R) \rightarrow \mathcal{L}_2(\R)\)
-    is
-    a mapping $\Sigma(u) \mapsto y$
-    \begin{figure}
-      \centering \includegraphics[width=0.35\textwidth]{figures/system}
-    \end{figure}
+\begin{frame}
+  \centering
+  \vfill
+  {\LARGE Nobody uses state-space models.\par}
+  \vfill
+\end{frame}
+%
+\begin{frame}
+  \frametitle{Outline}
+  \begin{itemize}
+    \item Why?
+    \item What are state-space models?
+    \item Application: FABIAN HRTF Database
+    \item Theorems + Insights
+    \item Example
+  \end{itemize}
+\end{frame}
+%
+\begin{frame}{Linear Time-Invariant Systems (discrete-time)}
+  \begin{minipage}[c]{.58\linewidth}
     \begin{itemize}
-      \item Linearity:
-            \[
-              \Sigma(\alpha u_1 + u_2) = \alpha\Sigma(u_1)
-                                         + \Sigma(u_2),\quad\alpha
-                                       \in \R
-            \]
-      \item Time-invariance:
-            \[
-              \Sigma\mathcal{S}_{\tau}(u) = \mathcal{S}_{\tau}\Sigma(u)
-            \]
+      \item \(u,y \in \ell_2(\mathbb{Z})\)
+      \item \(\Sigma:\ell_2(\mathbb{Z}) \rightarrow \ell_2(\mathbb{Z})\)
+      \item \(\Sigma(u) \mapsto y\)
     \end{itemize}
-    Dynamics of LTI systems are fully described by impulse response
-    $h = \Sigma(\delta) \in \mathcal{L}_2(\R)$:
+  \end{minipage}
+  \begin{minipage}[c]{.37\linewidth}
+    \raggedright
+    \hspace*{-.4cm}\raisebox{-.25cm}{%
+      \begin{tikzpicture}[baseline=(system.center)]
+        \node[
+            draw,
+            line width=.8pt,
+            rounded corners=3pt,
+            minimum size=1.35cm,
+            inner sep=0pt
+          ]
+          (system) {{\Large \(\Sigma\)}};
+        \coordinate (input) at ($(system.west) + (-1,0)$);
+        \coordinate (output) at ($(system.east) + (1,0)$);
+        \draw[->, line width=.8pt] (input) -- (system.west);
+        \draw[->, line width=.8pt] (system.east) -- (output);
+        \node at ($(input) + (-.2,0)$) {{\Large \(u\)}};
+        \node at ($(output) + (.2,0)$) {{\Large \(y\)}};
+      \end{tikzpicture}%
+    }
+  \end{minipage}
+
+  \vfill
+  \begin{minipage}[t][.42\textheight][t]{\textwidth}
+    \only<2>{
+      \begin{itemize}
+        \item Linearity:
+              \(\Sigma(\alpha u_1 + u_2) = \alpha\Sigma(u_1) + \Sigma(u_2),\quad\alpha \in \R\)
+        \item Time-invariance:
+              \(\Sigma\mathcal{S}_{\tau}(u) = \mathcal{S}_{\tau}\Sigma(u)\)
+      \end{itemize}
+    }
+
+    \only<3->{
+      \vspace{1.2cm}
+      \hspace*{.04\linewidth}
+      \begin{minipage}[t]{.28\linewidth}
+        \centering
+        \raisebox{.3cm}[0pt][0pt]{System}\par
+        \begin{tikzpicture}[
+            remember picture,
+            baseline=(ltisystemformula.base)
+          ]
+          \node[inner sep=0pt] (ltisystemformula)
+            {\(\displaystyle y_k = \Sigma(u)_k\)};
+        \end{tikzpicture}
+      \end{minipage}
+      \hspace{.04\linewidth}
+      \begin{minipage}[t]{.28\linewidth}
+        \centering
+        \raisebox{.3cm}[0pt][0pt]{Impulse Response}\par
+        \begin{tikzpicture}[
+            remember picture,
+            baseline=(ltiimpulseformula.base)
+          ]
+          \node[inner sep=0pt] (ltiimpulseformula)
+            {\(\displaystyle\begin{aligned}
+                              y_k & = (h \ast u)_k                           \\
+                                  & = \sum_{\ell \in \N_0} h_\ell u_{k-\ell}
+                            \end{aligned}\)};
+        \end{tikzpicture}
+      \end{minipage}
+      \hspace{.04\linewidth}
+      \begin{minipage}[t]{.28\linewidth}
+        \centering
+        \raisebox{.3cm}[0pt][0pt]{Transfer Function}\par
+        \begin{tikzpicture}[
+            remember picture,
+            baseline=(ltitransferformula.base)
+          ]
+          \node[inner sep=0pt] (ltitransferformula)
+            {\(\displaystyle Y(z) = H(z)U(z)\)};
+        \end{tikzpicture}
+      \end{minipage}
+
+      \only<4->{
+        \begin{tikzpicture}[remember picture,overlay,xshift=-.2cm]
+          \node[
+              draw,
+              ellipse,
+              line width=.6pt,
+              minimum width=3.3cm,
+              minimum height=4cm,
+              fill=TU-hellgrau,
+              fill opacity=.2
+            ]
+            (ltisystemset) at (ltisystemformula.center) {};
+          \node[
+              draw,
+              ellipse,
+              line width=.6pt,
+              minimum width=3.3cm,
+              minimum height=4cm,
+              fill=TU-hellgrau,
+              fill opacity=.2
+            ]
+            (ltiimpulseset) at (ltiimpulseformula.center) {};
+          \node[
+              draw,
+              ellipse,
+              line width=.6pt,
+              minimum width=3.3cm,
+              minimum height=4cm,
+              fill=TU-hellgrau,
+              fill opacity=.2
+            ]
+            (ltitransferset) at (ltitransferformula.center) {};
+          \node[font=\large, anchor=south] at ($(ltisystemset.north) + (0,.1)$)
+            {\(\mathcal{S}_{\mathrm{LTI}}\)};
+          \node[font=\large, anchor=south] at ($(ltiimpulseset.north) + (0,.1)$)
+            {\(\ell_2(\mathbb{Z})\)};
+          \node[
+              font=\large,
+              anchor=south
+            ] at ($(ltitransferset.north) + (0,.1)$)
+            {\(\mathcal{H}_2\)};
+          \node at ($(ltisystemset.east)!0.5!(ltiimpulseset.west)$)
+            {\scalebox{1.8}[1.4]{\(\leftrightarrows\)}};
+          \node at ($(ltiimpulseset.east)!0.5!(ltitransferset.west)$)
+            {\scalebox{1.8}[1.4]{\(\leftrightarrows\)}};
+        \end{tikzpicture}
+      }
+    }
+  \end{minipage}
+\end{frame}
+%
+\begin{frame}{Problems}
+  Numerical instabilities
+  \vfill
+  \[
+    H(z) = \frac{\sum_{k=0}^{N} b_k z^{-k}}
+                 {1 - \sum_{k=1}^{M} a_k z^{-k}}
+  \]
+  \vfill
+  MIMO complexity
+  \vfill
+  \centering
+  \includegraphics[width=.35\textwidth]{faltung.png}
+  \hspace{2cm}
+  \includegraphics[width=.35\textwidth]{ssm.png}
+\end{frame}
+%
+\begin{frame}
+  \frametitle{Message: Use state-space formulations}
+  Advantages
+  \begin{itemize}
+    \item True MIMO modelling
+    \item Numerical stability
+    \item Physical insight
+    \item Model order reduction
+    \item Structure
+  \end{itemize}
+  \vspace{.5cm}
+  Head-related transfer functions (HRTFs) are particularly well-suited
+\end{frame}
+%
+\begin{frame}[t]{State-Space Realizations}
+  \begin{columns}[T,onlytextwidth]
+    \column{.54\textwidth}
+    Discrete-time state equations:\\
+    \begin{center}
+      \ttcbox{\(\begin{aligned}
+                  x_{k+1} & = \matA x_k + \matB u_k, \\
+                  y_k     & = \matC x_k + \matD u_k.
+                \end{aligned}\)}
+    \end{center}
+    \[
+      \matA \in \R[n][n],~\matB
+            \in \R[n][m],~ \matC
+            \in \R[p][n],~\matD
+            \in \R[p][m]
+    \]
+    \column{.41\textwidth}
+    \centering
+    \systemmatrix*{4}{3}{2}
+  \end{columns}
+
+  \vfill
+  \only<2->{
     \begin{itemize}
-      \item Convolution:
+      \item Impulse response:
             \[
-              \Sigma(u(t)) = (h \ast u)(t)
-                           = \int_{-\infty}^\infty h(t - \tau)u(\tau)\,\mathrm{d}\tau
-                           = y(t)
+              h_k = \begin{cases}
+                      \matD,                 & k = 0,    \\
+                      \matC\matA^{k-1}\matB, & k \geq 1.
+                    \end{cases}
+            \]
+      \item Transfer function:
+            \[
+              \matH(z) = \matC(z\matI_n - \matA)^{-1}\matB + \matD
             \]
     \end{itemize}
   }
-  \only<2>
-  {
-    Let $u,y \in \blue{\ell_2(\mathbb{Z})}$, a system
-    \(\Sigma:\blue{\ell_2(\mathbb{Z})} \rightarrow \blue{\ell_2(\mathbb{Z})}\)
-    is a mapping $\Sigma(u) \mapsto y$
-    \begin{figure}
-      \centering \includegraphics[width=0.35\textwidth]{figures/system}
-    \end{figure}
-    \begin{itemize}
-      \item Linearity:
-            \[
-              \Sigma(\alpha u_1 + u_2) = \alpha\Sigma(u_1)
-                                         + \Sigma(u_2),\quad\alpha
-                                       \in \R
-            \]
-      \item Time-invariance:
-            \[
-              \Sigma\mathcal{S}_{\tau}(u) = \mathcal{S}_{\tau}\Sigma(u)
-            \]
-    \end{itemize}
-    Dynamics of LTI systems are fully described by impulse response
-    $h = \Sigma(\delta) \in \blue{\ell_2(\mathbb{Z})}$:
-    \begin{itemize}
-      \item Convolution:
-            \[
-              y_k = \Sigma(u)_k
-                  = \blue{\sum_{\ell\in\N_0} h_\ell u_{k-\ell}}
-            \]
-    \end{itemize}
-  }
+\end{frame}
+%
+\begin{frame}{Internal Description vs. External Description}
+  \centering
+  \vfill
+  \begin{tikzpicture}[ description/.style={
+      draw, ellipse, line width=.6pt, minimum width=2.9cm, minimum height=4cm,
+      fill=TU-hellgrau, fill opacity=.2
+    } ]
+    \node[description] (system) at (0,0) {};
+    \node[description] (impulse) at (3.6,0) {};
+    \node[description] (transfer) at (7.2,0) {};
+    \node[description] (state) at (10.8,0) {};
+
+    \node[align=center] at (system.center)
+      {LTI System\\[.5em] \(\mathcal{S}_{\mathrm{LTI}}\)};
+    \node[align=center] at (impulse.center)
+      {Impulse\\ Response\\[.5em] \(\ell_2(\mathbb{Z})\)};
+    \node[align=center] at (transfer.center)
+      {Transfer\\ Function\\[.5em] \(\mathcal{H}_2\)};
+    \node[align=center] at (state.center)
+      {State-Space\\ System\\[.5em] \((\matA,\matB,\matC,\matD)\)};
+
+    \node at ($(system.east)!0.5!(impulse.west)$)
+      {\scalebox{1.8}[1.4]{\(\leftrightarrows\)}};
+    \node at ($(impulse.east)!0.5!(transfer.west)$)
+      {\scalebox{1.8}[1.4]{\(\leftrightarrows\)}};
+    \node at ($(transfer.east)!0.5!(state.west)$)
+      {\scalebox{1.8}[1.4]{\(\leftrightarrows\)}};
+  \end{tikzpicture}
+  \vfill
+  How do we get a state-space system from an impulse response?\\
+  What is the smallest possible \(n\) such that a state-space system has impulse
+  response \(h\)?
+\end{frame}
+%
+\begin{frame}
+  \frametitle{Hankel Matrix}
+  MIMO impulse response \(h_k \in \R^{p \times m}\)
+  \begin{equation*}
+    \H = \begin{bmatrix}
+           h_1    & h_2     & h_3     & \cdots   & h_s      \\
+           h_2    & \iddots &         & \iddots  & h_{s+1}  \\
+           h_3    &         & \iddots & \iddots  & \vdots   \\
+           \vdots & \iddots & \iddots &          & h_{2s-2} \\
+           h_s    & h_{s+1} & \cdots  & h_{2s-2} & h_{2s-1}
+         \end{bmatrix}
+       \in \R^{ps \times ms}
+  \end{equation*}
+  \vfill
+  \begin{center}
+    \ttcbox[fontupper=\large]{McMillan degree: \(\rank{\H}\)}
+  \end{center}
+\end{frame}
+%
+\begin{frame}{How to obtain a state-space realization from impulse responses?}
+  Eigensystem Realization Algorithm\footcite{juang1985} (for dummies)
+  \begin{itemize}
+    \item Form Hankel matrix \(\H\)
+    \item Compute (truncated) SVD of \(\H\)
+    \item Solve a least-squares problem of size \((2s-2)r^2\)
+  \end{itemize}
+\end{frame}
+%
+\begin{frame}{Head-Related Transfer Functions}
+  \vspace{0.2cm}
+  \begin{figure}[ht]
+    \centering \includegraphics[width=0.95\linewidth]{figures/fabian-head}
+    \caption{\footnotesize\fullcite{brinkmann2017}}
+  \end{figure}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Frequency Domain Description} \(z\)-transform of impulse response:
-  \[
-    \mathcal{Z}\{h_k\} = \matH(z) = \sum_{k \in \mathbb{Z}} h_k z^{-k}
-  \]
-  Transmission is given by the transfer function \(\matH(z)\):
-  \[
-    \matY(z) = \mathcal{Z}\{y_k\}
-             = \matH(z)\matU(z)
-  \]
-  Common representations:
-  \begin{itemize}
-    \item Rational:
-          \[
-            \matH(z)
-            = \frac{\sum_{k=0}^{N}b_kz^{-k}}{1 - \sum_{k=1}^{M}a_{k}z^{-k}} \onslide
-            < 2
-            > {\quad \rightarrow \quad\text{barycentric form}:~\frac{\sum_{k=0}^{K}\frac{\alpha_{k}}{z - t_k}}{\sum_{k=0}^K\frac{\beta_k}{z - t_k}}}
-          \]
-          \onslide<2>{\footcite{trefethen2013}}
-    \item Pole-residue:
-          \[
-            \matH(z) = \sum_{k=1}^{K}\frac{c_kb_k}{z - \lambda_k}
-          \]
-  \end{itemize}
-\end{frame}
-%
-\begin{frame}{State-Space Realizations}
-  \begin{itemize}
-    \item \textbf{External description} (\(h_k, \matH(z)\))\hfill vs.\hfill \textbf{internal description} (state \(x_k\))
-  \end{itemize}
-  \begin{ttcbox}
-    Discrete-time state equations:
-    \[
-      \begin{gathered}
-        x_{k+1} = \matA x_k + \matB u_k, \qquad
-        y_k = \matC x_k + \matD u_k, \\
-        \matA \in \R[n][n],\quad \matB \in \R[n][m], \\
-        \matC \in \R[p][n],\quad \matD \in \R[p][m]
-      \end{gathered}
-    \]
-  \end{ttcbox}
-  \begin{itemize}
-    \item Markov parameters: \(h_0 = \matD\), \(h_k = \matC\matA^{k-1}\matB\) for \(k \geq 1\)
-    \item Transfer function: \(\matH(z) = \matC(z\matI_n - \matA)^{-1}\matB + \matD\)
-  \end{itemize}
+  \frametitle{FABIAN Database}
+  \begin{minipage}[t][\arraycolsep][t]{0.5\linewidth}
+    \only<1->{
+      \begin{itemize}
+        \item $m = 11\,950$ points on the sphere
+        \item $p = 2$ ears
+        \item<2-> $23\,900$ impulse responses (measured and modeled)
+        \item<2-> \(f_s = 44\,100\,\mathrm{Hz}\)
+        \item<2-> $s = 256$
+      \end{itemize}} \only<3->{\vspace*{.5cm}\Huge
+      \begin{equation*}
+        \Rightarrow \quad\mathcal{H} \in \R^{512 \times 3\,059\,200}
+      \end{equation*}}
+  \end{minipage}
+  %
+  \begin{minipage}[t][\arraycolsep][t]{0.4\linewidth}
+    \only<1>{\begin{figure}[ht]
+        \centering
+        \includegraphics[width=0.83\linewidth]{figures/fabian-ball}
+        \caption{\footnotesize\fullcite{brinkmann2017}}
+      \end{figure}} \only<2->{\begin{figure}[ht]
+        \centering
+        \includegraphics[width=0.83\linewidth]{figures/fabian-brir}
+        \caption{\footnotesize\fullcite{brinkmann2017}}
+      \end{figure}}
+  \end{minipage}
 \end{frame}
 %
 \begin{frame}
-  \frametitle{McMillan degree bound}
-  \begin{theorem}
-    \label{thm:order-bound}
-    Let \(h_k \in \R[p][m]\), \(k = 0,\dots,s\), denote an FIR-approximated
-    impulse response sequence with \(h_k = 0\) for every \(k > s\). Then, the
-    rational transfer function given by \(\matH_s(z) = \sum_{k=0}^sh_kz^{-k}\)
-    has McMillan degree at most \(ps\). In particular, for a MIMO-HRTF,
-    \(p = 2\) (the two ears), so its McMillan degree is at most \(2s\),
-    independently of the number \(m\) of sampled directions.
-  \end{theorem}
-\end{frame}
-%
-\begin{frame}
-  \frametitle{Loss-free virtual inputs}
-  \begin{theorem}
-    \label{thm:virtual inputs}
-    Assume \(h_k = 0\) for every \(k > s\). Then, \(q \leq \rank{\H} \leq ps\)
-    and \(h_k = h_k\matP_2\) for every \(k \geq 1\). Consequently, the projected
-    Hankel matrix constructed from \(\hat h_k = h_k\matW_2\) has the same
-    nonzero Hankel singular values as \(\H\). For every reduced order, the
-    Markov parameters of the projected and unprojected ERA models are identical.
-  \end{theorem}
-\end{frame}
-%
-\begin{frame}
-  \frametitle{Hankel Singular Values}
   \vfill
   \centering
+  \uncover<2->{
+    \tcbox[
+      on line,
+      colback=TU-hellgrau!25,
+      colframe=TU-hellgrau!70!black,
+      boxrule=.4pt,
+      sharp corners
+    ]{\textbf{Theorem.}~A MIMO-HRTF with \(s \in \N\) samples has McMillan
+      degree of at most \(2s\).}
+  }
+
+  \vfill
+  \begin{tikzpicture}[x=14cm,y=14cm]
+    \path[draw, line width=.6pt, fill=TU-hellgrau]
+      (0,0) rectangle (1,.00008351);
+  \end{tikzpicture}
+
+  \uncover<3->{
+    \vfill
+    \systemmatrix[1]{512}{11950}{2}
+  }
+
+  \uncover<4->{
+    \vfill
+    {\Large \textbf{Bottleneck:} SVD of \(\H\in \R^{512 \times 3\,059\,200}\)}
+  }
+  \vfill
+\end{frame}
+%
+\begin{frame}{Loss-free Virtual Input Projection}
+  Tangential Eigensystem Realization Algorithm\footfullcite{kramer2016}.
+  Assume \(h_k=0\) for \(k>s\).
+  \[
+    \Theta_R = \begin{bmatrix}h_1 \\ \vdots \\ h_s\end{bmatrix}
+             = \bar{\matU}\bar{\matSigma}\bar{\matV}^\top \in \R^{ps \times m},
+    \qquad q = \rank{\Theta_R}
+  \]
+  \[
+    \matW_2 = \bar{\matV} \in \R^{m \times q},
+    \quad \matW_2^\top\matW_2=\matI_q,
+    \quad \hat h_k = h_k\matW_2
+  \]
+  \begin{center}
+    \begin{tikzpicture}[x=.0009cm, y=.0009cm, baseline=(current bounding box.center)]
+      \path[draw, line width=.3pt, fill=TU-hellgrau!25]
+        (0,0) rectangle (11950,2);
+      \path[draw, line width=.3pt, fill=TU-hellgrau!25]
+        (12600,0) rectangle (13112,2);
+      \node[anchor=south] at (5975,110) {\(h_k\)};
+      \node[anchor=south] at (12856,110) {\(\hat h_k\)};
+      \node[font=\scriptsize, anchor=north] at (5975,-110)
+        {\(2 \times 11\,950\)};
+      \node[font=\scriptsize, anchor=north] at (12856,-110)
+        {\(2 \times 512\)};
+    \end{tikzpicture}
+  \end{center}
+  \only<2->{
+    \begin{align*}
+      \matP_2 & = \matW_2\matW_2^\top,
+        \quad h_k = h_k\matP_2 = \hat h_k\matW_2^\top,\quad k \geq 1, \\
+      \hat{\H} & = \H(\matI_s \otimes \matW_2)
+        \quad\Longrightarrow\quad \sigma_i(\hat{\H}) = \sigma_i(\H),
+        \quad i=1,\ldots,\rank{\H}.
+    \end{align*}
+  }
+\end{frame}
+%
+\begin{frame}{How to obtain a state-space realization from impulse responses?}
+  \blue{Loss-free Projected} Eigensystem Realization Algorithm (for dummies)
+  \begin{itemize}
+    \item \blue{Calculate SVD of \(\Theta_R\) and form \(\matW_2\)}
+    \item \blue{Project impulse responses with \(\matW_2\)}
+    \item Form \blue{projected} Hankel matrix \blue{\(\hat\H\)}
+    \item Compute (truncated) SVD of \blue{\(\hat\H\)}
+    \item Solve a least-squares problem of size \((2s-2)r^2\)
+    \item \blue{Backproject \(\hat\matB\matW_2^\top=\matB\)}
+  \end{itemize}
+  \vfill
+  One SVD \(512\times3\,059\,200\) \(\quad\Rightarrow\quad\) two SVDs \(512\times11\,950\) and \(512\times131\,072\)
+  \vfill
+  \centering
+  \systemmatrix[1]{512}{11950}{2}
+  \vfill
+  \begin{tikzpicture}[baseline=(current bounding box.center)]
+    \path[draw, line width=.2pt, fill=red!20]
+      (0,0) rectangle (.431391429945,.431391429945);
+    \path[draw, line width=.2pt, fill=blue!20]
+      (.581391429945,0) rectangle (1.012782859890,.431391429945);
+    \path[draw, line width=.2pt, fill=green!20]
+      (0,-.151685122773) rectangle (.431391429945,-.15);
+    \path[draw, line width=.2pt, fill=orange!25]
+      (.581391429945,-.151685122773) rectangle (1.012782859890,-.15);
+    \node at (1.087782859890,.215695714973) {{\Large \(\cdot\)}};
+    \path[draw, line width=.2pt, fill=yellow!30]
+      (1.162782859890,0) rectangle (11.231391429895,.431391429945);
+    \node at (6.197087144893,.215695714973) {\(\matW_2^\top\)};
+  \end{tikzpicture}
+\end{frame}
+%
+\begin{frame}
+  \frametitle{Hankel Singular Values} \vfill \centering
   \includegraphics{hsv-map.pdf}
   \includegraphics{hsv-colorbar.pdf}
   \vfill
 \end{frame}
 %
 \begin{frame}
-  \frametitle{Hankel Singular Values: ITD removed}
-  \vfill
-  \centering
+  \frametitle{Hankel Singular Values: ITD removed} \vfill \centering
   \includegraphics{hsv-map-itd-removed-slides.pdf}
   \includegraphics{hsv-colorbar.pdf}
   \vfill
 \end{frame}
 %
 \begin{frame}
-  \frametitle{Relative Error}
+  \frametitle{Relative Error} \vfill \centering
+  \begin{minipage}[c]{.65\textwidth}
+    \includegraphics[width=\linewidth]{relative-error.pdf}
+  \end{minipage}\hfill
+  \begin{minipage}[c]{.3\textwidth}
+    \includegraphics[width=\linewidth]{relative-error-legend-vertical.pdf}
+  \end{minipage}
+  \vfill
+\end{frame}
+%
+\begin{frame}{Impulse Responses \(r=70\)}
   \vfill
   \centering
-  \includegraphics[width=.65\textwidth]{bound-error.pdf}
-  \includegraphics[width=.3\textwidth]{bound-error-legend-vertical.pdf}
+  \includegraphics[width=.65\textwidth]{responses-itd-removed-time.pdf}
   \vfill
+\end{frame}
+%
+\begin{frame}{Transfer Functions \(r=70\)}
+  \vfill
+  \centering
+  \begin{minipage}[c]{.65\textwidth}
+    \includegraphics[width=\linewidth]{responses-frequency.pdf}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[c]{.28\textwidth}
+    \includegraphics[width=\linewidth]{responses-legend-vertical.pdf}
+  \end{minipage}
+  \vfill
+\end{frame}
+%
+\begin{frame}{Conclusion}
+  \begin{itemize}
+    \item State-space models provide a natural MIMO representation of LTI systems.
+    \item The McMillan degree of HRTFs is bounded \textbf{independently} of the number of input directions.
+    \item Loss-free virtual input projection makes realization process easy.
+  \end{itemize}
 \end{frame}
 %
 \begin{frame}[allowframebreaks]{References}
   \footnotesize
   \printbibliography
+  \vfill
+  \begin{center}
+    \includegraphics[height=2cm]{github-qr.png}\par
+    \href{https://github.com/artpelling/fa26-hrtf-ssm}{\texttt{github.com/artpelling/fa26-hrtf-ssm}}
+  \end{center}
+\end{frame}
+%
+\appendix
+%
+\begin{frame}{State Transformations}
+  Let \(\matT \in \R[n][n]\) be invertible and define
+  \[
+    \widetilde{x}_k = \matT^{-1}x_k.
+  \]
+  \[
+    \begin{aligned}
+      \widetilde{\matA} & = \matT^{-1}\matA\matT, & \widetilde{\matB} & = \matT^{-1}\matB, \\
+      \widetilde{\matC} & = \matC\matT,           & \widetilde{\matD} & = \matD.
+    \end{aligned}
+  \]
+  \vfill
+  \begin{itemize}
+    \item Impulse response:
+          \begin{align*}
+            \widetilde{h}_k & = \widetilde{\matC}\widetilde{\matA}^{k-1}\widetilde{\matB},\quad k \geq 1 \uncover < 2 - > {\\
+                                                                                                            & = \matC\blue{\matT}(\blue{\matT^{-1}}\matA\blue{\matT})^{k-1}\blue{\matT^{-1}}\matB \\
+                                                                                                            & = \matC\matA^{k-1}\matB}
+          \end{align*}
+    \item Transfer function:
+          \begin{align*}
+            \widetilde{\matH}(z) & = \widetilde{\matC}(z\matI_n - \widetilde{\matA})^{-1}\widetilde{\matB} + \widetilde{\matD} \\
+            \uncover < 2 - > {& = \matC\blue{\matT}(z\matI_n - \blue{\matT^{-1}}\matA\blue{\matT})^{-1}\blue{\matT^{-1}}\matB + \matD \\
+                              & = \matC(z\matI_n - \matA)^{-1}\matB + \matD}
+          \end{align*}
+  \end{itemize}
+\end{frame}
+%
+\begin{frame}
+  \centering
+  \vspace{-1cm}
+  \includegraphics[width=\textwidth]{projector.png}
 \end{frame}
 %
 \end{document}
