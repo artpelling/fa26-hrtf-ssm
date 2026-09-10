@@ -23,8 +23,9 @@ DIRECTION = (np.pi / 4, np.pi / 12)
 OUTPUTS = (
     OUTPUT_DIR / "responses-itd-removed-time.pdf",
     OUTPUT_DIR / "responses-frequency.pdf",
-    OUTPUT_DIR / "responses-legend.pdf",
 )
+LEGEND = OUTPUT_DIR / "responses-legend.pdf"
+VERTICAL_LEGEND = OUTPUT_DIR / "responses-legend-vertical.pdf"
 ITD_MODEL_COLORS = (plot_color("left_ear"), plot_color("right_ear"))
 ITD_ERROR_COLORS = (plot_color("left_ear", 1), plot_color("right_ear", 1))
 RAW_MODEL_COLORS = (plot_color("no_removal"), plot_color("itd_removal"))
@@ -119,9 +120,12 @@ def plot_frequency(measured, raw_reconstructed, itd_reconstructed):
     return figure
 
 
-def plot_legend():
-    """Create a compact shared legend explaining data, models, and errors."""
-    figure, axis = plt.subplots(figsize=(2 * COLUMN_WIDTH_IN, 0.85), layout="constrained")
+def plot_legend(ncols=3):
+    """Create a shared legend explaining data, models, and errors."""
+    figure, axis = plt.subplots(
+        figsize=(2 * COLUMN_WIDTH_IN if ncols > 1 else COLUMN_WIDTH_IN, 0.85 if ncols > 1 else 3.0),
+        layout="constrained",
+    )
     axis.axis("off")
     handles = (
         Line2D([], [], color="black", linewidth=2, label="Measured data"),
@@ -134,7 +138,7 @@ def plot_legend():
         Line2D([], [], color=RAW_ERROR_COLORS[0], linestyle="--", linewidth=0.75, label="Original-delay error, left"),
         Line2D([], [], color=RAW_ERROR_COLORS[1], linestyle="--", linewidth=0.75, label="Original-delay error, right"),
     )
-    axis.legend(handles=handles, loc="center", ncols=3, frameon=False, fontsize=8)
+    axis.legend(handles=handles, loc="center", ncols=ncols, frameon=False, fontsize=8)
     return figure
 
 
@@ -149,15 +153,18 @@ def main():
             plot_frequency(results["measured"], results["raw_reconstructed"], results["itd_reconstructed"]),
         )
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    for figure, output in zip(figures, OUTPUTS[:-1]):
+    for figure, output in zip(figures, OUTPUTS):
         figure.savefig(output, bbox_inches="tight", pad_inches=0.02)
     legend = plot_legend()
-    legend.savefig(OUTPUTS[-1], bbox_inches="tight", pad_inches=0)
+    legend.savefig(LEGEND, bbox_inches="tight", pad_inches=0)
+    vertical_legend = plot_legend(ncols=1)
+    vertical_legend.savefig(VERTICAL_LEGEND, bbox_inches="tight", pad_inches=0)
     if not args.no_show:
         plt.show()
     for figure in figures:
         plt.close(figure)
     plt.close(legend)
+    plt.close(vertical_legend)
 
 
 if __name__ == "__main__":

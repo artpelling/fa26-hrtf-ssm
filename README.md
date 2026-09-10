@@ -22,3 +22,7 @@ make clean    # remove generated artifacts and LaTeX build output
 Results are written to `generated/data/`; figures are written to `generated/figures/`.
 
 The computed Hankel singular values are contained in the repository because they can take hours to compute. To recalculate them from scratch, run `make generated/data/hsv-map.npy generated/data/hsv-map-itd-removed.npy`.
+
+## Slides
+
+[download](slides/build/main.pdf)

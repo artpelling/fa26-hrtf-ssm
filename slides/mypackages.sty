@@ -1,0 +1,35 @@
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{lmodern}
+
+\usefonttheme[onlymath]{serif}
+\usepackage{mathdots}
+\usepackage{graphicx}
+\usepackage{caption}
+
+\usepackage{hyperref}
+
+\usepackage[backend=biber,style=verbose,giveninits=true,sorting=nyt,sortcites=true,defernumbers=true]{biblatex}
+\AtBeginBibliography{\footnotesize} \AtEveryBibitem{\clearfield{month}}
+\AtEveryBibitem{\clearfield{day}} \AtEveryBibitem{\clearfield{primaryClass}}
+\renewbibmacro{in:}{} \DeclareFieldFormat*{title}{\mkbibitalic{#1}}
+\DeclareFieldFormat{journaltitle}{#1\isdot} \DeclareSourcemap{
+  \maps[datatype=bibtex]{ \map{
+    \step[
+      fieldsource=eprint,
+      final
+    ] % stop if doi doesn't exist
+    \step[fieldset=url, null] % delete field
+    \step[fieldset=urldate, null] \step[fieldset=doi, null]
+    \step[fieldset=isbn, null]
+  } \map{
+    \step[fieldsource=doi, final]
+    \step[fieldset=url, null] \step[fieldset=urldate, null]
+    \step[fieldset=eprint, null] \step[fieldset=eprinttype, null]
+    \step[fieldset=archivePrefix, null] \step[fieldset=isbn, null]
+  } }
+}
+\emergencystretch=1em
+\usepackage[autostyle=true]{csquotes} \usepackage{url}
+\setcounter{biburllcpenalty}{7000} \setcounter{biburlucpenalty}{8000}

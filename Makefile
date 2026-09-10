@@ -5,7 +5,7 @@ EXPERIMENT_VALUES := $(GENERATED_DATA_DIR)/experiment-values.tex
 RESPONSES_RESULTS := $(GENERATED_DATA_DIR)/responses.npz
 RESULTS := $(HSV_MAPS) $(BOUND_ERROR_RESULTS) $(RESPONSES_RESULTS)
 HSV_FIGURES := generated/figures/hsv-map.pdf generated/figures/hsv-map-itd-removed.pdf
-BOUND_ERROR_FIGURES := generated/figures/bound-error.pdf generated/figures/bound-error-legend.pdf
+BOUND_ERROR_FIGURES := generated/figures/bound-error.pdf generated/figures/bound-error-legend.pdf generated/figures/bound-error-legend-vertical.pdf
 SCALABILITY_FIGURE := generated/figures/scalability.pdf
 RESPONSES_FIGURES := generated/figures/responses-itd-removed-time.pdf generated/figures/responses-frequency.pdf generated/figures/responses-legend.pdf
 FIGURES := $(HSV_FIGURES) $(SCALABILITY_FIGURE) $(BOUND_ERROR_FIGURES) $(RESPONSES_FIGURES)
@@ -49,7 +49,12 @@ paper: figures $(EXPERIMENT_VALUES)
 	mkdir -p paper/build
 	cd paper && latexmk main.tex
 
+slides: figures $(EXPERIMENT_VALUES)
+	mkdir -p slides/build
+	cd slides && latexmk main.tex
+
 clean:
 	cd paper && latexmk -C main.tex
+	cd slides && latexmk -C main.tex
 	find generated paper/tikz -type f ! -name '.keep' -delete 2>/dev/null || true
 	find generated paper/tikz -depth -type d -empty -delete 2>/dev/null || true
